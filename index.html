@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Общий фонд 🌾</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>* { box-sizing: border-box; } body { margin: 0; padding: 0; }</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel" src="/app.jsx"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      function tryMount() {
+        if (typeof App !== 'undefined') {
+          ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+        } else {
+          setTimeout(tryMount, 100);
+        }
+      }
+      setTimeout(tryMount, 500);
+    });
+  </script>
+</body>
+</html>
