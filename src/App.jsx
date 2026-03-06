@@ -152,8 +152,6 @@ const INIT_NOTIFICATIONS = [];
 
 const CATEGORIES = ["Все","Еда","Жильё","Здоровье","Знания","Транспорт","Дети","Культура"];
 const CAT_ICONS = {"Еда":"🌿","Жильё":"🏠","Здоровье":"💙","Знания":"📖","Транспорт":"🚗","Дети":"🌱","Культура":"🎵","Все":"✦"};
-// Mutable ref for dynamic icons (updated at runtime from DB)
-let catIcons = {...CAT_ICONS};
 const AV_COLORS = ["#7c6ff7","#f97316","#22c55e","#ec4899","#06b6d4","#eab308"];
 
 // ─── THEME ────────────────────────────────────────────────────────────────────
@@ -173,8 +171,7 @@ const THEMES = {
 // ─── WALLET & POTENTIAL ───────────────────────────────────────────────────────
 const walletNum = (id, joined) => {
   const yymm = (joined||"2024-03").replace("-","").slice(0,6);
-  const num = parseInt(String(id).replace(/\D/g,"")) || id;
-  return `ОФ-${yymm}-${String(num).padStart(4,"0")}`;
+  return `ОФ-${yymm}-${String(id).padStart(4,"0")}`;
 };
 const payPotential = (memberId, offers, balance) => {
   const offSum = offers
@@ -290,21 +287,12 @@ function QtyBar({ qty, reserved, T }) {
 
 function Sheet({ onClose, children, T }) {
   const bg = T?.card||"#131720"; const br = T?.border||"#1e2330";
-  const touchY = useRef(null);
-  const handleTouchStart = (e) => { touchY.current = e.touches[0].clientY; };
-  const handleTouchEnd = (e) => {
-    if(touchY.current === null) return;
-    const dy = e.changedTouches[0].clientY - touchY.current;
-    if(dy > 60) onClose();
-    touchY.current = null;
-  };
   return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",
     display:"flex",alignItems:"flex-end",zIndex:200,backdropFilter:"blur(4px)"}}
     onClick={e=>e.target===e.currentTarget&&onClose()}>
     <div style={{background:bg,borderRadius:"20px 20px 0 0",padding:"24px 20px 36px",
       width:"100%",border:`1px solid ${br}`,animation:"slideIn 0.25s ease",
-      maxHeight:"90vh",overflowY:"auto",color:T?.text||"#e2e8f0"}}
-      onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      maxHeight:"90vh",overflowY:"auto",color:T?.text||"#e2e8f0"}}>
       <div style={{width:36,height:4,background:br,borderRadius:2,margin:"0 auto 20px"}} />
       {children}</div></div>;
 }
@@ -544,7 +532,7 @@ function NetworkGraph({ members, transactions, invites, onSelectMember }) {
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
 // ─── NEG LIMIT EDITOR ────────────────────────────────────────────────────────
 function NegLimitEditor({ negLimit, onSetNegLimit, T }) {
-  const [val, setVal] = useState(Math.abs(negLimit));
+  const [val, setVal] = React.useState(Math.abs(negLimit));
   return <div style={{display:"flex",gap:8,alignItems:"center"}}>
     <input type="number" min="0" max="1000" value={val} onChange={e=>setVal(Number(e.target.value))}
       style={{flex:1,background:T.input,border:`1px solid ${T.border}`,borderRadius:10,color:T.text,
@@ -558,7 +546,7 @@ function NegLimitEditor({ negLimit, onSetNegLimit, T }) {
 
 
 function AdminPanel({ members, offers, transactions, invites, balances, news, meId, T,
-  categories, onAddCategory, onDeleteCategory, onMoveCategory, onEditCategoryIcon,
+  categories, onAddCategory, onDeleteCategory, onMoveCategory,
   onCreateInvite, onBack, onSelectMember, onFreezeToggle, onDeleteMember,
   onSetRole, onAddNews, onDeleteNews, negLimit, onSetNegLimit }) {
 
@@ -677,7 +665,7 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
           {Object.entries(catVol).sort((a,b)=>b[1]-a[1]).map(([cat,vol])=>(
             <div key={cat} style={{marginBottom:8}}>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:T.text2,marginBottom:3}}>
-                <span>{catIcons[cat]||"◎"} {cat}</span><span style={{fontWeight:600}}>{cur(vol)}</span>
+                <span>{CAT_ICONS[cat]||"◎"} {cat}</span><span style={{fontWeight:600}}>{cur(vol)}</span>
               </div>
               <div style={{height:5,background:T.border,borderRadius:3}}>
                 <div style={{height:"100%",borderRadius:3,background:"#6366f1",width:`${(vol/maxVol)*100}%`}} /></div>
@@ -824,19 +812,12 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
               </div>
               <div style={{width:34,height:34,borderRadius:9,background:T.border,display:"flex",
                 alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0}}>
-                {catIcons[cat]||"✦"}
+                {CAT_ICONS[cat]||"✦"}
               </div>
               <div style={{flex:1}}>
                 <div style={{fontWeight:600,fontSize:14,color:T.text}}>{cat}</div>
                 <div style={{fontSize:11,color:T.text4}}>{cnt} предложений</div>
               </div>
-              <input defaultValue={catIcons[cat]||"✦"} onBlur={e=>{
-                  const icon=e.target.value.trim()||"✦";
-                  if(onEditCategoryIcon) onEditCategoryIcon(cat,icon);
-                }}
-                style={{width:38,background:T.input,border:`1px solid ${T.border}`,borderRadius:8,
-                  color:T.text,padding:"4px",fontSize:18,fontFamily:"inherit",outline:"none",
-                  textAlign:"center",flexShrink:0}} title="Изменить иконку" />
               {cnt===0&&<button onClick={()=>onDeleteCategory&&onDeleteCategory(cat)}
                 style={{background:"none",border:`1px solid ${T.border}`,color:"#f87171",
                   padding:"4px 9px",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>✕</button>}
@@ -971,7 +952,7 @@ function OfferForm({ initial, onSave, onClose, T }) {
       {CATEGORIES.filter(c=>c!=="Все").map(c=>(
         <button key={c} onClick={()=>B(c)} style={{background:category===c?T?.accent||"#6366f1":T?.input||"#0d0f14",
           border:`1px solid ${category===c?T?.accent||"#6366f1":T?.border||"#1e2330"}`,color:category===c?"#fff":T?.text2||"#94a3b8",
-          padding:"5px 11px",borderRadius:20,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{catIcons[c]} {c}</button>
+          padding:"5px 11px",borderRadius:20,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{CAT_ICONS[c]} {c}</button>
       ))}
     </div>
     <SL T={T}>Кол-во / Цена / Единица</SL>
@@ -1000,7 +981,7 @@ function RequestForm({ onSave, onClose, T }) {
       {CATEGORIES.map(c=>(
         <button key={c} onClick={()=>B(c)} style={{background:category===c?T?.accent||"#6366f1":T?.input||"#0d0f14",
           border:`1px solid ${category===c?T?.accent||"#6366f1":T?.border||"#1e2330"}`,color:category===c?"#fff":T?.text2||"#94a3b8",
-          padding:"5px 11px",borderRadius:20,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{catIcons[c]||"✦"} {c}</button>
+          padding:"5px 11px",borderRadius:20,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{CAT_ICONS[c]||"✦"} {c}</button>
       ))}
     </div>
     <SL T={T}>Бюджет ({CUR.plural})</SL>
@@ -1022,7 +1003,7 @@ function RequestDetail({ request, members, meId, onAcceptBid, onDeclineBid, onBi
   return <Sheet T={T} onClose={onClose}>
     <div style={{display:"flex",gap:12,marginBottom:14}}>
       <div style={{width:46,height:46,borderRadius:12,background:T.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>
-        {catIcons[request.category]||"🙋"}</div>
+        {CAT_ICONS[request.category]||"🙋"}</div>
       <div><div style={{fontWeight:700,fontSize:16}}>{request.title}</div>
         <div style={{fontSize:13,color:T.text3,marginTop:3}}>{request.desc}</div>
         {request.budget&&<div style={{fontSize:12,color:"#fbbf24",marginTop:4}}>Бюджет: до {cur(request.budget)}</div>}
@@ -1262,7 +1243,7 @@ function ProfileScreen({ member, members, offers, transactions, balances, invite
       <div style={{display:"flex",flexDirection:"column",gap:9}}>
         {myOff.map(o=>{const av=o.qty-o.reserved;return <div key={o.id} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:13,padding:"13px 14px",opacity:o.available?1:0.5}}>
           <div style={{display:"flex",gap:11}}>
-            <div style={{width:38,height:38,borderRadius:10,background:T.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>{catIcons[o.category]}</div>
+            <div style={{width:38,height:38,borderRadius:10,background:T.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>{CAT_ICONS[o.category]}</div>
             <div style={{flex:1}}>
               <div style={{fontWeight:600,fontSize:14}}>{o.title}</div>
               <div style={{fontSize:12,color:T.text3,marginTop:3}}>{o.desc}</div>
@@ -1822,16 +1803,6 @@ function ConstitutionScreen({ onBack, T }) {
       text:"Дар — безусловная передача зёрен без ожидания ответной услуги. Подарить можно только при положительном балансе и не больше, чем у тебя есть. Дары видны в реестре и формируют репутацию." },
     { icon:"📋", title:"Запросы",
       text:"Если тебе нужна помощь — создай запрос. Участники могут откликнуться с предложением цены. Ты принимаешь лучшее предложение — и сразу создаётся сделка. Открытый запрос можно отменить в любой момент." },
-    { icon:"🏡", title:"Живи по средствам",
-      text:["Основной принцип фонда: не бери больше, чем готов отдать.",
-            "",
-            "Отрицательный баланс — это не штраф, это обязательство перед сообществом. Ты взял ценность и обязан вернуть её в другой форме.",
-            "",
-            "• Не накапливай долг без плана, как его закрыть",
-            "• Если баланс уходит в минус — выставляй предложения и бери запросы",
-            "• Фонд существует на взаимности: каждый рубль доверия — это чья-то реальная услуга",
-            "",
-            "Лимит задолженности устанавливается администратором. Участник с хроническим минусом без активных предложений может быть исключён из фонда."].join("\n") },
     { icon:"🔒", title:"Инвайты и вступление",
       text:"В Общий фонд можно войти только по инвайт-коду от действующего участника. Это сохраняет доверие и качество сообщества. Каждый участник несёт ответственность за тех, кого пригласил." },
     { icon:"📊", title:"Прозрачность и реестр",
@@ -1915,7 +1886,6 @@ function GiftMemberPicker({ members, meId, giftTo, setGiftTo, balances, T }) {
 const GCSS=`
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}::-webkit-scrollbar{display:none;}input,textarea{outline:none;}
-  html,body{background:#0d0f14;overscroll-behavior:none;}
   @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
   @keyframes slideIn{from{opacity:0;transform:translateY(24px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
   @keyframes notif{0%{opacity:0;transform:translateX(-50%) translateY(-8px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-8px)}}
@@ -1924,9 +1894,8 @@ const GCSS=`
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [meId,         setMeId]         = useState(null);
-  const [themeKey,     setThemeKey]     = useState(()=>localStorage.getItem("of_theme")||"dark");
+  const [themeKey,     setThemeKey]     = useState("dark");
   const T = THEMES[themeKey];
-  useEffect(()=>{ localStorage.setItem("of_theme", themeKey); document.body.style.background = THEMES[themeKey].bg; },[themeKey]);
   const [loading,      setLoading]      = useState(true);
   const [dbError,      setDbError]      = useState(null);
   const [accounts,     setAccounts]     = useState([]);
@@ -1959,13 +1928,17 @@ export default function App() {
   const [addingOff,    setAddingOff]    = useState(false);
   const [openReq,      setOpenReq]      = useState(null);
   const [showNotifs,   setShowNotifs]   = useState(false);
+  useEffect(()=>{
+    if(!showNotifs)return;
+    const t=setTimeout(()=>setShowNotifs(false),5000);
+    return ()=>clearTimeout(t);
+  },[showNotifs]);
   const [showConstitution, setShowConstitution] = useState(false);
   const [messages,     setMessages]     = useState([]); // {from, to, text, time, ts, read
   const [groupMessages,setGroupMessages]= useState([]);  // {from, text, time, ts}}
   const [reviews,      setReviews]      = useState([]); // {txId, from, to, stars, text, date, what}
   const [lightbox,     setLightbox]     = useState(null); // photo src
   const [categories,   setCategories]   = useState(CATEGORIES); // manageable
-  const [, forceRender] = useState(0); // for catIcons updates
   const [showReviewFor, setShowReviewFor] = useState(null); // tx object
 
   const me        = members.find(m=>m.id===meId);
@@ -2022,8 +1995,6 @@ export default function App() {
         if(rawCats.length>0) {
           const catNames = rawCats.map(c=>c.name);
           setCategories(["Все", ...catNames]);
-          // Build icons from DB
-          rawCats.forEach(c=>{ catIcons[c.name] = c.icon||"✦"; });
         }
 
         const negLimitSetting = rawSettings.find(s=>s.key==="neg_limit");
@@ -2368,9 +2339,6 @@ export default function App() {
   async function sendMessage(from, to, text) {
     if(text===null) { // mark-read call
       setMessages(p=>p.map(m=>m.to===meId&&m.from===to?{...m,read:true}:m));
-      // persist to DB
-      const unread = messages.filter(m=>m.to===meId&&m.from===to&&!m.read);
-      for(const msg of unread){ sb.update("messages",{read:true},`id=eq.${msg.id}`); }
       return;
     }
     const now = new Date();
@@ -2404,15 +2372,7 @@ export default function App() {
     const sortOrder=categories.length;
     await sb.insert("categories",{id,name:name.trim(),icon:icon||"✦",sort_order:sortOrder});
     setCategories(p=>[...p, name.trim()]);
-    catIcons[name.trim()] = icon||"✦";
     notify(`✓ Категория «${name.trim()}» добавлена`);
-  }
-  async function editCategoryIcon(name, icon) {
-    const cats=await sb.select("categories",`name=eq.${encodeURIComponent(name)}`);
-    if(cats[0]) await sb.update("categories",{icon},`id=eq.${cats[0].id}`);
-    catIcons[name] = icon;
-    forceRender(n=>n+1);
-    notify(`✓ Иконка обновлена`);
   }
   async function deleteCategory(name) {
     const cats=await sb.select("categories",`name=eq.${encodeURIComponent(name)}`);
@@ -2486,7 +2446,7 @@ export default function App() {
               await sb.upsert("settings",{key:"neg_limit",value:String(v)},"key");
               setNegLimit(v);
             }}
-      categories={categories} onAddCategory={addCategory} onDeleteCategory={deleteCategory} onMoveCategory={moveCategory} onEditCategoryIcon={editCategoryIcon} /></div></div>;
+      categories={categories} onAddCategory={addCategory} onDeleteCategory={deleteCategory} onMoveCategory={moveCategory} /></div></div>;
 
   if(view==="profile") return <div style={WRAP}><style>{GCSS}</style>
     {notif&&<Notif msg={notif} />}
@@ -2557,21 +2517,14 @@ export default function App() {
         borderBottom:`1px solid ${T.border}`,position:"sticky",top:0,background:T.card,zIndex:1}}>
         <span style={{fontSize:11,color:T.text4,fontWeight:600,letterSpacing:1,textTransform:"uppercase"}}>Уведомления</span>
         {notifications.filter(n=>n.memberId===meId&&!n.read).length>0&&
-          <button onClick={async()=>{
-            setNotifications(p=>p.map(x=>x.memberId===meId?{...x,read:true}:x));
-            const unread = notifications.filter(n=>n.memberId===meId&&!n.read);
-            for(const n of unread){ await sb.update("notifications",{read:true},`id=eq.${n.id}`); }
-          }}
+          <button onClick={()=>setNotifications(p=>p.map(x=>x.memberId===meId?{...x,read:true}:x))}
             style={{fontSize:11,background:"none",border:`1px solid ${T.border}`,color:T.text4,
               padding:"2px 8px",borderRadius:6,cursor:"pointer",fontFamily:"inherit"}}>Все прочитаны</button>}
       </div>
       {notifications.filter(n=>n.memberId===meId).length===0
         ?<div style={{padding:"16px 20px",fontSize:13,color:T.text5}}>Нет уведомлений</div>
         :notifications.filter(n=>n.memberId===meId).slice(0,15).map(n=>(
-          <div key={n.id} onClick={async()=>{
-              setNotifications(p=>p.map(x=>x.id===n.id?{...x,read:true}:x));
-              if(!n.read) await sb.update("notifications",{read:true},`id=eq.${n.id}`);
-            }}
+          <div key={n.id} onClick={()=>setNotifications(p=>p.map(x=>x.id===n.id?{...x,read:true}:x))}
             style={{padding:"10px 16px",borderBottom:`1px solid ${T.border}`,cursor:"pointer",
               background:n.read?"transparent":"#6366f108",display:"flex",gap:10,alignItems:"flex-start"}}
             onMouseEnter={e=>e.currentTarget.style.background=T.border}
@@ -2620,7 +2573,7 @@ export default function App() {
         {(categories||CATEGORIES).map(c=><button key={c} onClick={()=>setCatFilter(c)} style={{
           background:catFilter===c?T.accent:T.card,border:`1px solid ${catFilter===c?T.accent:T.border}`,
           color:catFilter===c?"#fff":T.text2,padding:"4px 11px",borderRadius:20,fontSize:12,
-          fontWeight:500,whiteSpace:"nowrap",cursor:"pointer",fontFamily:"inherit"}}>{catIcons[c]} {c}</button>)}
+          fontWeight:500,whiteSpace:"nowrap",cursor:"pointer",fontFamily:"inherit"}}>{CAT_ICONS[c]} {c}</button>)}
       </div>}
 
       {/* NEWS TAB */}
@@ -2668,7 +2621,7 @@ export default function App() {
               onMouseLeave={e=>e.currentTarget.style.background=T.card}>
               {offer.photo
                 ? <div onClick={e=>{e.stopPropagation();setLightbox(offer.photo);}} style={{width:54,height:54,borderRadius:10,overflow:"hidden",flexShrink:0,cursor:"zoom-in"}}><img src={offer.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/></div>
-                : <div style={{width:42,height:42,borderRadius:10,background:T.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{catIcons[offer.category]}</div>}
+                : <div style={{width:42,height:42,borderRadius:10,background:T.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{CAT_ICONS[offer.category]}</div>}
               <div style={{flex:1}}>
                 <div style={{fontWeight:600,fontSize:14,marginBottom:3,color:T.text}}>{offer.title}</div>
                 <div style={{fontSize:12,color:T.text3,lineHeight:1.4}}>{offer.desc}</div>
@@ -2701,7 +2654,7 @@ export default function App() {
               onMouseEnter={e=>e.currentTarget.style.background=T.border}
               onMouseLeave={e=>e.currentTarget.style.background=T.card}>
               <div style={{display:"flex",gap:11}}>
-                <div style={{width:40,height:40,borderRadius:10,background:T.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>{catIcons[req.category]||"🙋"}</div>
+                <div style={{width:40,height:40,borderRadius:10,background:T.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>{CAT_ICONS[req.category]||"🙋"}</div>
                 <div style={{flex:1}}>
                   <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
                     <div style={{fontWeight:600,fontSize:14,color:T.text}}>{req.title}</div>
@@ -2834,7 +2787,7 @@ export default function App() {
       <div style={{display:"flex",gap:12,marginBottom:14}}>
         {selOffer.photo
           ? <div style={{width:54,height:54,borderRadius:12,overflow:"hidden",flexShrink:0}}><img src={selOffer.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/></div>
-          : <div style={{width:48,height:48,borderRadius:12,background:T.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{catIcons[selOffer.category]}</div>}
+          : <div style={{width:48,height:48,borderRadius:12,background:T.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{CAT_ICONS[selOffer.category]}</div>}
         <div><div style={{fontWeight:700,fontSize:16,color:T.text}}>{selOffer.title}</div><div style={{fontSize:13,color:T.text3,marginTop:3}}>{selOffer.desc}</div></div>
       </div>
       <QtyBar T={T} qty={selOffer.qty} reserved={selOffer.reserved} />
