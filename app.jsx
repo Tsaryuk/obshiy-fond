@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+// React hooks from UMD global (Babel standalone + CDN React)
+const { useState, useRef, useEffect, useCallback } = React;
 
 // ─── SUPABASE CLIENT ──────────────────────────────────────────────────────────
 const SUPA_URL = "https://ecddhpgfdapuxfrlrszo.supabase.co";
