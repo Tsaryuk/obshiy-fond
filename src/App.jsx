@@ -969,8 +969,9 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
 }
 
 // ─── OFFER / REQUEST FORMS ────────────────────────────────────────────────────
-function OfferForm({ initial, onSave, onClose, T }) {
-  const [title,A]=useState(initial?.title??""); const [category,B]=useState(initial?.category??"Еда");
+function OfferForm({ initial, onSave, onClose, T, categories: cats }) {
+  const catList = (cats||CATEGORIES).filter(c=>c!=="Все");
+  const [title,A]=useState(initial?.title??""); const [category,B]=useState(initial?.category??(catList[0]||"Еда"));
   const [price,C]=useState(initial?.price??0); const [unit,D]=useState(initial?.unit??"раз");
   const [qty,E]=useState(initial?.qty??1); const [desc,F]=useState(initial?.desc??"");
   const [photo,G]=useState(initial?.photo??null);
@@ -996,10 +997,10 @@ function OfferForm({ initial, onSave, onClose, T }) {
     <SL T={T}>Название</SL><FI T={T} value={title} onChange={A} placeholder="Что предлагаешь?" />
     <SL T={T}>Категория</SL>
     <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:12}}>
-      {CATEGORIES.filter(c=>c!=="Все").map(c=>(
+      {catList.map(c=>(
         <button key={c} onClick={()=>B(c)} style={{background:category===c?T?.accent||"#6366f1":T?.input||"#0d0f14",
           border:`1px solid ${category===c?T?.accent||"#6366f1":T?.border||"#1e2330"}`,color:category===c?"#fff":T?.text2||"#94a3b8",
-          padding:"5px 11px",borderRadius:20,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{CAT_ICONS[c]} {c}</button>
+          padding:"5px 11px",borderRadius:20,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{CAT_ICONS[c]||"◎"} {c}</button>
       ))}
     </div>
     <SL T={T}>Цена / Кол-во / Единица</SL>
@@ -1016,7 +1017,8 @@ function OfferForm({ initial, onSave, onClose, T }) {
   </Sheet>;
 }
 
-function RequestForm({ onSave, onClose, T }) {
+function RequestForm({ onSave, onClose, T, categories: cats }) {
+  const catList = cats||CATEGORIES;
   const [title,A]=useState(""); const [category,B]=useState("Все");
   const [desc,C]=useState(""); const [budget,D]=useState("");
   return <Sheet T={T} onClose={onClose}>
@@ -1025,7 +1027,7 @@ function RequestForm({ onSave, onClose, T }) {
     <SL T={T}>Что нужно</SL><FI T={T} value={title} onChange={A} placeholder="Ищу, нужна…" />
     <SL T={T}>Категория</SL>
     <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:12}}>
-      {CATEGORIES.map(c=>(
+      {catList.map(c=>(
         <button key={c} onClick={()=>B(c)} style={{background:category===c?T?.accent||"#6366f1":T?.input||"#0d0f14",
           border:`1px solid ${category===c?T?.accent||"#6366f1":T?.border||"#1e2330"}`,color:category===c?"#fff":T?.text2||"#94a3b8",
           padding:"5px 11px",borderRadius:20,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{CAT_ICONS[c]||"✦"} {c}</button>
@@ -1157,7 +1159,7 @@ function DemurrageInfo({ memberId, balances, transactions, T }) {
 
 
 function ProfileScreen({ member, members, offers, transactions, balances, invites, meId, T,
-  reviews, onReview,
+  reviews, onReview, categories,
   onBack, onAddOffer, onEditOffer, onToggleOffer, onDeleteOffer,
   onUpdateProfile, onCreateInvite, onCancelTx, onConfirmTx, onSelectMember }) {
 
@@ -1379,8 +1381,8 @@ function ProfileScreen({ member, members, offers, transactions, balances, invite
         </div>;})}
     </div>}
 
-    {addOff&&<OfferForm T={T} onClose={()=>B(false)} onSave={d=>{onAddOffer(d);B(false);}} />}
-    {editOff&&<OfferForm T={T} initial={editOff} onClose={()=>C(null)} onSave={d=>{onEditOffer(editOff.id,d);C(null);}} />}
+    {addOff&&<OfferForm T={T} categories={categories} onClose={()=>B(false)} onSave={d=>{onAddOffer(d);B(false);}} />}
+    {editOff&&<OfferForm T={T} categories={categories} initial={editOff} onClose={()=>C(null)} onSave={d=>{onEditOffer(editOff.id,d);C(null);}} />}
   </div>;
 }
 
@@ -2143,46 +2145,54 @@ export default function App() {
     ()=>tabIdx<tabKeys.length-1&&changeTab(tabKeys[tabIdx+1],"left")
   );
 
-  // Pull-to-refresh handlers
-  const onPullStart = useCallback(e => {
-    const el = scrollRef.current;
-    if(el && el.scrollTop === 0) pullStartY.current = e.touches[0].clientY;
-  }, []);
-  const onPullMove = useCallback(e => {
-    if(pullStartY.current === null || refreshing) return;
-    const dy = e.touches[0].clientY - pullStartY.current;
-    if(dy > 0) setPullY(Math.min(dy * 0.4, 64));
-  }, [refreshing]);
-  const onPullEnd = useCallback(async () => {
-    if(pullY > 40) {
-      setRefreshing(true);
-      setPullY(0);
-      // trigger refresh
-      try {
-        const [rawNotifs, rawMsgs, rawTxs, rawOffers, rawRequests, rawBids] = await Promise.all([
-          sb.select("notifications", `member_id=eq.${meId}&order=date.desc`),
-          sb.select("messages", "order=date.asc"),
-          sb.select("transactions", "order=created_at.desc"),
-          sb.select("offers", "order=created_at.desc"),
-          sb.select("requests", "order=created_at.desc"),
-          sb.select("bids"),
-        ]);
-        setNotifications(rawNotifs.map(toNotif));
-        const allMsgs = rawMsgs.map(toMsg);
-        setMessages(allMsgs.filter(m=>!m.isGroup));
-        setGroupMessages(allMsgs.filter(m=>m.isGroup));
-        const txs = rawTxs.map(toTx);
-        setTransactions(txs);
-        setOffers(rawOffers.map(toOffer));
-        setRequests(rawRequests.map(r=>toRequest(r, rawBids)));
-      } finally {
-        setTimeout(()=>setRefreshing(false), 600);
-      }
-    } else {
-      setPullY(0);
-    }
-    pullStartY.current = null;
-  }, [pullY, meId]);
+  const doRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const [rawNotifs, rawMsgs, rawTxs, rawOffers, rawRequests, rawBids] = await Promise.all([
+        sb.select("notifications", `member_id=eq.${meId}&order=date.desc`),
+        sb.select("messages", "order=date.asc"),
+        sb.select("transactions", "order=created_at.desc"),
+        sb.select("offers", "order=created_at.desc"),
+        sb.select("requests", "order=created_at.desc"),
+        sb.select("bids"),
+      ]);
+      setNotifications(rawNotifs.map(toNotif));
+      const allMsgs = rawMsgs.map(toMsg);
+      setMessages(allMsgs.filter(m=>!m.isGroup));
+      setGroupMessages(allMsgs.filter(m=>m.isGroup));
+      setTransactions(rawTxs.map(toTx));
+      setOffers(rawOffers.map(toOffer));
+      setRequests(rawRequests.map(r=>toRequest(r, rawBids)));
+    } finally { setTimeout(()=>setRefreshing(false), 500); }
+  }, [meId]);
+
+  // Pull-to-refresh via window listeners
+  const pullYRef = useRef(0);
+  useEffect(() => {
+    if(!meId) return;
+    const onStart = e => {
+      if(window.scrollY <= 0) pullStartY.current = e.touches[0].clientY;
+    };
+    const onMove = e => {
+      if(pullStartY.current === null) return;
+      const dy = e.touches[0].clientY - pullStartY.current;
+      if(dy > 0) { const v = Math.min(dy * 0.45, 72); pullYRef.current = v; setPullY(v); }
+    };
+    const onEnd = () => {
+      if(pullYRef.current > 45) { setPullY(0); doRefresh(); }
+      else setPullY(0);
+      pullYRef.current = 0;
+      pullStartY.current = null;
+    };
+    window.addEventListener("touchstart", onStart, {passive:true});
+    window.addEventListener("touchmove", onMove, {passive:true});
+    window.addEventListener("touchend", onEnd, {passive:true});
+    return () => {
+      window.removeEventListener("touchstart", onStart);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onEnd);
+    };
+  }, [meId, doRefresh]);
 
   function notify(msg){setNotif(msg);setTimeout(()=>setNotif(null),2800);}
   async function addNotification(memberId,type,text){
@@ -2587,6 +2597,7 @@ export default function App() {
     {notif&&<Notif msg={notif} />}
     <div style={INNER}><ProfileScreen member={profileTarget} members={members} offers={offers}
       transactions={transactions} balances={balances} invites={invites} meId={meId} T={T}
+      categories={categories}
       onBack={goBack} onAddOffer={addOffer} onEditOffer={editOffer}
       onToggleOffer={toggleOffer} onDeleteOffer={deleteOffer}
       onUpdateProfile={updateProfile} onCreateInvite={createInvite}
@@ -2729,9 +2740,7 @@ export default function App() {
       }
     </div>
 
-    <div ref={scrollRef}
-      onTouchStart={onPullStart} onTouchMove={onPullMove} onTouchEnd={onPullEnd}
-      style={{padding:"12px 20px",paddingBottom:80,overflowY:"auto"}} {...swipeMain}>
+    <div ref={scrollRef} style={{padding:"12px 20px",paddingBottom:80}} {...swipeMain}>
 
       <div key={tabKey} className={tabDir==="left"?"tab-enter-left":tabDir==="right"?"tab-enter-right":""}>
 
@@ -3000,8 +3009,8 @@ export default function App() {
       <PB T={T} v="gold" onClick={doGift} disabled={!giftTo}>Передать {cur(giftCustom?Number(giftCustom):giftAmt)} · без условий</PB>
     </Sheet>}
 
-    {addingReq&&<RequestForm T={T} onClose={()=>setAddingReq(false)} onSave={d=>{addRequest(d);setAddingReq(false);}} />}
-    {addingOff&&<OfferForm T={T} onClose={()=>setAddingOff(false)} onSave={d=>{addOffer(d);setAddingOff(false);}} />}
+    {addingReq&&<RequestForm T={T} categories={categories} onClose={()=>setAddingReq(false)} onSave={d=>{addRequest(d);setAddingReq(false);}} />}
+    {addingOff&&<OfferForm T={T} categories={categories} onClose={()=>setAddingOff(false)} onSave={d=>{addOffer(d);setAddingOff(false);}} />}
     {openReq&&<RequestDetail T={T} request={openReq} members={members} meId={meId}
       onAcceptBid={(rId,bId)=>{acceptBid(rId,bId);setOpenReq(null);}}
       onDeclineBid={declineBid}
