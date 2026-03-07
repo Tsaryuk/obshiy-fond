@@ -292,18 +292,50 @@ function QtyBar({ qty, reserved, T }) {
 
 function Sheet({ onClose, children, T }) {
   const bg = T?.card||"#131720"; const br = T?.border||"#1e2330";
+  const [dragY, setDragY] = useState(0);
+  const [closing, setClosing] = useState(false);
   const startY = useRef(null);
-  return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",
-    display:"flex",alignItems:"flex-end",zIndex:200,backdropFilter:"blur(4px)"}}
-    onClick={e=>e.target===e.currentTarget&&onClose()}>
-    <div
-      onTouchStart={e=>{ startY.current=e.touches[0].clientY; }}
-      onTouchEnd={e=>{ if(startY.current!==null && e.changedTouches[0].clientY - startY.current > 60) onClose(); startY.current=null; }}
-      style={{background:bg,borderRadius:"20px 20px 0 0",padding:"24px 20px 36px",
-        width:"100%",border:`1px solid ${br}`,animation:"slideIn 0.25s ease",
-        maxHeight:"90vh",overflowY:"auto",color:T?.text||"#e2e8f0"}}>
-      <div style={{width:36,height:4,background:br,borderRadius:2,margin:"0 auto 20px"}} />
-      {children}</div></div>;
+
+  const doClose = useCallback(() => {
+    setClosing(true);
+    setTimeout(onClose, 260);
+  }, [onClose]);
+
+  const onTouchStart = useCallback(e => { startY.current = e.touches[0].clientY; }, []);
+  const onTouchMove = useCallback(e => {
+    if(startY.current === null) return;
+    const dy = e.touches[0].clientY - startY.current;
+    if(dy > 0) setDragY(dy);
+  }, []);
+  const onTouchEnd = useCallback(e => {
+    if(startY.current === null) return;
+    const dy = e.changedTouches[0].clientY - startY.current;
+    if(dy > 60) { setDragY(0); doClose(); }
+    else setDragY(0);
+    startY.current = null;
+  }, [doClose]);
+
+  const progress = Math.min(dragY / 120, 1);
+  const sheetStyle = {
+    background: bg, borderRadius: "20px 20px 0 0", padding: "24px 20px 36px",
+    width: "100%", border: `1px solid ${br}`,
+    animation: closing ? "slideOut 0.26s ease forwards" : "slideIn 0.25s ease",
+    maxHeight: "90vh", overflowY: "auto", color: T?.text||"#e2e8f0",
+    transform: `translateY(${dragY}px)`,
+    transition: dragY === 0 ? "transform 0.2s ease" : "none",
+  };
+
+  return <div style={{position:"fixed",inset:0,
+    background:`rgba(0,0,0,${0.75 - progress * 0.5})`,
+    display:"flex",alignItems:"flex-end",zIndex:200,backdropFilter:`blur(${4 - progress*4}px)`,
+    transition: dragY===0 ? "background 0.2s" : "none"}}
+    onClick={e=>e.target===e.currentTarget&&doClose()}>
+    <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} style={sheetStyle}>
+      <div style={{width:36,height:4,background:br,borderRadius:2,margin:"0 auto 20px",
+        opacity: 1 - progress * 0.5}} />
+      {children}
+    </div>
+  </div>;
 }
 
 function SL({ children, mt=0, T }) {
@@ -1913,8 +1945,14 @@ const GCSS=`
   *{box-sizing:border-box;margin:0;padding:0;}::-webkit-scrollbar{display:none;}input,textarea{outline:none;}
   html,body{background:#0d0f14;overscroll-behavior-y:none;}
   @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes slideIn{from{opacity:0;transform:translateY(24px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes slideIn{from{opacity:0;transform:translateY(30px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes slideOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(100%)}}
+  @keyframes slideLeft{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+  @keyframes slideRight{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:translateX(0)}}
   @keyframes notif{0%{opacity:0;transform:translateX(-50%) translateY(-8px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-8px)}}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  .tab-enter-left{animation:slideLeft 0.22s cubic-bezier(0.25,0.46,0.45,0.94)}
+  .tab-enter-right{animation:slideRight 0.22s cubic-bezier(0.25,0.46,0.45,0.94)}
 `;
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
@@ -2085,10 +2123,66 @@ export default function App() {
 
   const tabKeys = TABS_DEF.map(t=>t.key);
   const tabIdx  = tabKeys.indexOf(tab);
+  const [tabDir, setTabDir] = useState(null); // "left" | "right"
+  const [tabKey, setTabKey] = useState(0); // force re-render for animation
+
+  // Pull-to-refresh state
+  const [pullY, setPullY] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const pullStartY = useRef(null);
+  const scrollRef = useRef(null);
+
+  const changeTab = useCallback((newTab, dir) => {
+    setTabDir(dir);
+    setTabKey(k=>k+1);
+    setTab(newTab);
+  }, []);
+
   const swipeMain = useSwipe(
-    ()=>tabIdx>0&&setTab(tabKeys[tabIdx-1]),
-    ()=>tabIdx<tabKeys.length-1&&setTab(tabKeys[tabIdx+1])
+    ()=>tabIdx>0&&changeTab(tabKeys[tabIdx-1],"right"),
+    ()=>tabIdx<tabKeys.length-1&&changeTab(tabKeys[tabIdx+1],"left")
   );
+
+  // Pull-to-refresh handlers
+  const onPullStart = useCallback(e => {
+    const el = scrollRef.current;
+    if(el && el.scrollTop === 0) pullStartY.current = e.touches[0].clientY;
+  }, []);
+  const onPullMove = useCallback(e => {
+    if(pullStartY.current === null || refreshing) return;
+    const dy = e.touches[0].clientY - pullStartY.current;
+    if(dy > 0) setPullY(Math.min(dy * 0.4, 64));
+  }, [refreshing]);
+  const onPullEnd = useCallback(async () => {
+    if(pullY > 40) {
+      setRefreshing(true);
+      setPullY(0);
+      // trigger refresh
+      try {
+        const [rawNotifs, rawMsgs, rawTxs, rawOffers, rawRequests, rawBids] = await Promise.all([
+          sb.select("notifications", `member_id=eq.${meId}&order=date.desc`),
+          sb.select("messages", "order=date.asc"),
+          sb.select("transactions", "order=created_at.desc"),
+          sb.select("offers", "order=created_at.desc"),
+          sb.select("requests", "order=created_at.desc"),
+          sb.select("bids"),
+        ]);
+        setNotifications(rawNotifs.map(toNotif));
+        const allMsgs = rawMsgs.map(toMsg);
+        setMessages(allMsgs.filter(m=>!m.isGroup));
+        setGroupMessages(allMsgs.filter(m=>m.isGroup));
+        const txs = rawTxs.map(toTx);
+        setTransactions(txs);
+        setOffers(rawOffers.map(toOffer));
+        setRequests(rawRequests.map(r=>toRequest(r, rawBids)));
+      } finally {
+        setTimeout(()=>setRefreshing(false), 600);
+      }
+    } else {
+      setPullY(0);
+    }
+    pullStartY.current = null;
+  }, [pullY, meId]);
 
   function notify(msg){setNotif(msg);setTimeout(()=>setNotif(null),2800);}
   async function addNotification(memberId,type,text){
@@ -2611,7 +2705,7 @@ export default function App() {
       {TABS_DEF.map(t=>{
         const badge=t.key==="requests"?requests.filter(r=>r.status==="open").length
           :t.key==="news"?pinnedNews.length:0;
-        return <button key={t.key} onClick={()=>setTab(t.key)} style={{
+        return <button key={t.key} onClick={()=>changeTab(t.key, tabKeys.indexOf(t.key) > tabIdx ? "left" : "right")} style={{
           background:"none",border:"none",padding:"10px 0",marginRight:16,fontSize:12,
           fontWeight:tab===t.key?600:400,color:tab===t.key?T.text:T.text4,
           borderBottom:tab===t.key?`2px solid ${T.accent}`:"2px solid transparent",
@@ -2622,7 +2716,24 @@ export default function App() {
       })}
     </div>
 
-    <div style={{padding:"12px 20px",paddingBottom:80}} {...swipeMain}>
+    {/* PULL TO REFRESH */}
+    <div style={{
+      height: refreshing ? 44 : pullY > 0 ? pullY : 0,
+      display:"flex",alignItems:"center",justifyContent:"center",
+      overflow:"hidden",transition: pullY===0 ? "height 0.3s ease" : "none",
+      color:"#6366f1",fontSize:12,gap:6,
+    }}>
+      {refreshing
+        ? <><span style={{animation:"spin 0.8s linear infinite",display:"inline-block"}}>↻</span> Обновление…</>
+        : pullY > 30 ? <><span>↓</span> Отпусти для обновления</> : <span>↓</span>
+      }
+    </div>
+
+    <div ref={scrollRef}
+      onTouchStart={onPullStart} onTouchMove={onPullMove} onTouchEnd={onPullEnd}
+      style={{padding:"12px 20px",paddingBottom:80,overflowY:"auto"}} {...swipeMain}>
+
+      <div key={tabKey} className={tabDir==="left"?"tab-enter-left":tabDir==="right"?"tab-enter-right":""}>
 
       {/* CAT FILTER */}
       {(tab==="offers"||tab==="requests")&&<div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
@@ -2836,7 +2947,8 @@ export default function App() {
       <div style={{marginTop:12,fontSize:10,color:T.text5,fontFamily:"monospace"}}>
         v{APP_VERSION} · {new Date().getFullYear()}
       </div>
-    </div>
+    </div>{/* end tab animation wrapper */}
+    </div>{/* end scroll container */}
 
     {/* BOOK SHEET */}
     {selOffer&&<Sheet T={T} onClose={()=>{setSelOffer(null);setTxNote("");setBookQty(1);}}>
