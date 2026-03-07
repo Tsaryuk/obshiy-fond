@@ -101,7 +101,7 @@ const toReview = (r) => r ? ({
 
 const toMsg = (r) => r ? ({
   id: r.id, from: r.from_member, to: r.to_member,
-  text: r.body||"", time: r.date||"", isGroup: r.is_group||false
+  text: r.body||"", time: r.date||"", isGroup: r.is_group||false, read: r.read||false
 }) : null;
 
 const toNotif = (r) => r ? ({
@@ -966,13 +966,13 @@ function OfferForm({ initial, onSave, onClose, T }) {
           padding:"5px 11px",borderRadius:20,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{CAT_ICONS[c]} {c}</button>
       ))}
     </div>
-    <SL T={T}>Цена / Единица / Кол-во</SL>
+    <SL T={T}>Цена / Кол-во / Единица</SL>
     <div style={{display:"flex",gap:7,marginBottom:11,width:"100%",boxSizing:"border-box"}}>
       <input type="number" min="0" value={price} onChange={e=>C(Number(e.target.value))} placeholder="0"
         style={{width:0,flex:2,minWidth:0,background:T?.input||"#0d0f14",border:`1px solid ${T?.border||"#1e2330"}`,borderRadius:10,color:T?.text||"#e2e8f0",padding:"10px 8px",fontSize:13,fontFamily:"inherit",outline:"none"}} />
-      <input value={unit} onChange={e=>D(e.target.value)} placeholder="раз"
-        style={{width:0,flex:2,minWidth:0,background:T?.input||"#0d0f14",border:`1px solid ${T?.border||"#1e2330"}`,borderRadius:10,color:T?.text||"#e2e8f0",padding:"10px 8px",fontSize:13,fontFamily:"inherit",outline:"none"}} />
       <input type="number" min="1" value={qty} onChange={e=>E(Number(e.target.value))} placeholder="кол-во"
+        style={{width:0,flex:2,minWidth:0,background:T?.input||"#0d0f14",border:`1px solid ${T?.border||"#1e2330"}`,borderRadius:10,color:T?.text||"#e2e8f0",padding:"10px 8px",fontSize:13,fontFamily:"inherit",outline:"none"}} />
+      <input value={unit} onChange={e=>D(e.target.value)} placeholder="раз"
         style={{width:0,flex:2,minWidth:0,background:T?.input||"#0d0f14",border:`1px solid ${T?.border||"#1e2330"}`,borderRadius:10,color:T?.text||"#e2e8f0",padding:"10px 8px",fontSize:13,fontFamily:"inherit",outline:"none"}} />
     </div>
     <SL T={T}>Описание</SL><FI T={T} value={desc} onChange={F} placeholder="Расскажи подробнее…" multi />
@@ -2509,27 +2509,35 @@ export default function App() {
               -{cur(calcDemurrage(myBalance,1))}/мес
             </div>}
           </div>
-          <div style={{display:"flex",gap:6,alignItems:"center"}}>
-            {/* THEME TOGGLE */}
-            <button onClick={()=>setThemeKey(k=>k==="dark"?"light":"dark")} style={{background:T.card,border:`1px solid ${T.border}`,color:T.text3,padding:"3px 9px",borderRadius:7,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>{themeKey==="dark"?"☀":"🌙"}</button>
-            {/* CHAT */}
-            <button onClick={()=>setView("chat")} style={{background:T.card,border:`1px solid ${T.border}`,color:T.text3,padding:"3px 9px",borderRadius:7,fontSize:13,cursor:"pointer",fontFamily:"inherit",position:"relative"}}>
-              💬{messages.filter(m=>m.to===meId&&!m.read).length>0&&
-                <span style={{position:"absolute",top:-4,right:-4,width:14,height:14,borderRadius:"50%",background:"#6366f1",color:"#fff",fontSize:8,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  {messages.filter(m=>m.to===meId&&!m.read).length}</span>}
-            </button>
-            {/* MY TASKS */}
-            <button onClick={()=>setView("tasks")} style={{background:T.card,border:`1px solid ${T.border}`,color:T.text3,padding:"3px 9px",borderRadius:7,fontSize:11,cursor:"pointer",fontFamily:"inherit",position:"relative"}}>
-              ✓{transactions.filter(t=>(t.from===meId||t.to===meId)&&t.status==="active").length>0&&
-                <span style={{position:"absolute",top:-4,right:-4,width:14,height:14,borderRadius:"50%",background:"#f97316",color:"#fff",fontSize:8,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  {transactions.filter(t=>(t.from===meId||t.to===meId)&&t.status==="active").length}</span>}
-            </button>
-            {/* NOTIFICATIONS */}
-            <button onClick={()=>setShowNotifs(!showNotifs)} style={{position:"relative",background:T.card,border:`1px solid ${T.border}`,color:T.text2,padding:"4px 9px",borderRadius:7,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
-              🔔{myNotifs.length>0&&<span style={{position:"absolute",top:-4,right:-4,width:16,height:16,borderRadius:"50%",background:"#f97316",color:"#fff",fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{myNotifs.length}</span>}
-            </button>
-            {canModerate(myRole)&&<button onClick={()=>setView("admin")} style={{background:"#fbbf2415",border:"1px solid #fbbf2430",color:"#fbbf24",padding:"3px 9px",borderRadius:7,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>⚙</button>}
-            <button onClick={handleLogout} style={{background:T.card,border:`1px solid ${T.border}`,color:T.text4,padding:"3px 9px",borderRadius:7,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Выйти</button>
+          <div style={{display:"flex",gap:5,alignItems:"center"}}>
+            {/* единый стиль для всех кнопок шапки */}
+            {[
+              { icon: themeKey==="dark"?"☀️":"🌙", onClick:()=>setThemeKey(k=>k==="dark"?"light":"dark"), badge:0 },
+              { icon:"💬", onClick:()=>setView("chat"), badge: messages.filter(m=>m.to===meId&&!m.read).length },
+              { icon:"✓", onClick:()=>setView("tasks"), badge: transactions.filter(t=>(t.from===meId||t.to===meId)&&t.status==="active").length, iconStyle:{fontWeight:700,fontSize:15} },
+              { icon:"🔔", onClick:()=>setShowNotifs(!showNotifs), badge: myNotifs.length },
+            ].map((b,i)=>(
+              <button key={i} onClick={b.onClick} style={{
+                position:"relative",width:32,height:32,borderRadius:8,
+                background:T.card,border:`1px solid ${T.border}`,
+                color:T.text2,fontSize:16,cursor:"pointer",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                flexShrink:0,...(b.iconStyle||{})
+              }}>
+                {b.icon}
+                {b.badge>0&&<span style={{position:"absolute",top:-4,right:-4,minWidth:15,height:15,borderRadius:8,background:"#f97316",color:"#fff",fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 2px"}}>{b.badge}</span>}
+              </button>
+            ))}
+            {canModerate(myRole)&&<button onClick={()=>setView("admin")} style={{
+              width:32,height:32,borderRadius:8,background:"#fbbf2415",
+              border:"1px solid #fbbf2430",color:"#fbbf24",fontSize:15,
+              cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0
+            }}>⚙️</button>}
+            <button onClick={handleLogout} style={{
+              height:32,borderRadius:8,background:T.card,
+              border:`1px solid ${T.border}`,color:T.text4,
+              padding:"0 10px",fontSize:11,cursor:"pointer",fontFamily:"inherit",flexShrink:0
+            }}>Выйти</button>
           </div>
         </div>
       </div>
