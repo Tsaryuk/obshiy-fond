@@ -150,7 +150,8 @@ const INIT_NEWS = [];
 const INIT_NOTIFICATIONS = [];
 
 const CATEGORIES = ["Все","Еда","Жильё","Здоровье","Знания","Транспорт","Дети","Культура"];
-const APP_VERSION = "1.2";
+const APP_VERSION = "1.3";
+const VersionFooter = ({T}) => <div style={{textAlign:"center",padding:"16px 0 8px",fontSize:10,color:T?.text5||"#1e2330",opacity:0.6,fontFamily:"monospace"}}>Общий фонд · v{APP_VERSION}</div>;
 
 let CAT_ICONS = {"Еда":"🌿","Жильё":"🏠","Здоровье":"💙","Знания":"📖","Транспорт":"🚗","Дети":"🌱","Культура":"🎵","Все":"✦"};
 const AV_COLORS = ["#7c6ff7","#f97316","#22c55e","#ec4899","#06b6d4","#eab308"];
@@ -252,12 +253,14 @@ function useSwipe(onSwipeRight, onSwipeLeft) {
 
 // ─── ATOMS ────────────────────────────────────────────────────────────────────
 function Avatar({ member, size=36 }) {
-  const bg = AV_COLORS[(member.id||0) % AV_COLORS.length];
+  const idHash = String(member.id||"").split("").reduce((a,c)=>a+c.charCodeAt(0),0);
+  const bg = AV_COLORS[idHash % AV_COLORS.length];
+  const initials = (member.name||"?").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
   if(member.photo) return <div style={{width:size,height:size,borderRadius:"50%",overflow:"hidden",flexShrink:0}}>
     <img src={member.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} /></div>;
   return <div style={{width:size,height:size,borderRadius:"50%",background:bg,flexShrink:0,
     display:"flex",alignItems:"center",justifyContent:"center",
-    fontSize:size*0.33,fontWeight:700,color:"#fff"}}>{member.avatar||"?"}</div>;
+    fontSize:size*0.33,fontWeight:700,color:"#fff",letterSpacing:"-0.5px"}}>{initials}</div>;
 }
 
 function Pill({ balance, T }) {
@@ -485,8 +488,8 @@ function NetworkGraph({ members, transactions, invites, onSelectMember }) {
     if(t.to>0)weight[t.to]=(weight[t.to]||1)+0.5;
   });
   const edges=[];
-  invites.filter(i=>i.usedBy&&i.createdBy>0).forEach(i=>{edges.push({a:i.createdBy,b:i.usedBy,type:"invite"});});
-  transactions.filter(t=>t.status==="confirmed"&&t.type==="exchange"&&t.from>0&&t.to>0).forEach(t=>{
+  invites.filter(i=>i.usedBy&&i.createdBy).forEach(i=>{edges.push({a:i.createdBy,b:i.usedBy,type:"invite"});});
+  transactions.filter(t=>t.status==="confirmed"&&t.type==="exchange"&&t.from&&t.to).forEach(t=>{
     if(!edges.find(e=>(e.a===t.from&&e.b===t.to)||(e.a===t.to&&e.b===t.from)))edges.push({a:t.from,b:t.to,type:"tx"});
   });
   useEffect(()=>{
@@ -508,12 +511,13 @@ function NetworkGraph({ members, transactions, invites, onSelectMember }) {
         ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
         ctx.strokeStyle=e.type==="invite"?"#6366f150":"#22c55e40";ctx.lineWidth=e.type==="invite"?1.5:1;
         ctx.setLineDash(e.type==="invite"?[4,4]:[]);ctx.stroke();ctx.setLineDash([]);});
-      nodes.forEach(n=>{const isH=hovered===n.id,bg=AV_COLORS[n.id%AV_COLORS.length];
+      nodes.forEach(n=>{const isH=hovered===n.id;const idH=String(n.id).split("").reduce((a,c)=>a+c.charCodeAt(0),0);const bg=AV_COLORS[idH%AV_COLORS.length];
         if(isH){ctx.beginPath();ctx.arc(n.x,n.y,n.r+7,0,Math.PI*2);ctx.fillStyle=bg+"30";ctx.fill();}
         ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle=bg;ctx.fill();
         if(isH){ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.stroke();}
-        ctx.fillStyle="#fff";ctx.font=`${Math.max(10,n.r*0.55)}px DM Sans,sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";
-        ctx.fillText(n.avatar,n.x,n.y);
+        ctx.fillStyle="#fff";ctx.font=`bold ${Math.max(9,n.r*0.45)}px DM Sans,sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";
+        const initials=(n.name||"?").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+        ctx.fillText(initials,n.x,n.y);
         if(isH){const nm=n.name.split(" ")[0];ctx.font="600 12px DM Sans,sans-serif";
           const tw=ctx.measureText(nm).width+12;ctx.fillStyle="#131720dd";
           ctx.fillRect(n.x-tw/2,n.y+n.r+4,tw,18);ctx.fillStyle="#e2e8f0";ctx.fillText(nm,n.x,n.y+n.r+13);}
@@ -2462,12 +2466,14 @@ export default function App() {
 
   if(view==="chat") return <div style={WRAP}><style>{GCSS}</style>{notif&&<Notif msg={notif}/>}
     <div style={INNER}><ChatScreen meId={meId} members={members} messages={messages}
-      onSend={sendMessage} onBack={goBack} groupMessages={groupMessages} T={T} onSelectMember={goToMember}/></div></div>;
+      onSend={sendMessage} onBack={goBack} groupMessages={groupMessages} T={T} onSelectMember={goToMember}/>
+    <VersionFooter T={T}/></div></div>;
 
   if(view==="tasks") return <div style={WRAP}><style>{GCSS}</style>{notif&&<Notif msg={notif}/>}
     <div style={INNER}><MyTasksScreen meId={meId} members={members} transactions={transactions}
       requests={requests} T={T} onBack={goBack}
-      onConfirmTx={confirmTx} onCancelTx={cancelTx} onMarkDone={markDone} onCancelRequest={cancelRequest} onCancelBid={cancelBid} onSelectMember={goToMember} onOpenReq={(r)=>{setOpenReq(r);setView("main");}} reviews={reviews} onReview={setShowReviewFor}/></div></div>;
+      onConfirmTx={confirmTx} onCancelTx={cancelTx} onMarkDone={markDone} onCancelRequest={cancelRequest} onCancelBid={cancelBid} onSelectMember={goToMember} onOpenReq={(r)=>{setOpenReq(r);setView("main");}} reviews={reviews} onReview={setShowReviewFor}/>
+    <VersionFooter T={T}/></div></div>;
 
   if(view==="admin") return <div style={WRAP}><style>{GCSS}</style>
     {notif&&<Notif msg={notif} />}
@@ -2480,7 +2486,8 @@ export default function App() {
               await sb.upsert("settings",{key:"neg_limit",value:String(v)},"key");
               setNegLimit(v);
             }}
-      categories={categories} onAddCategory={addCategory} onDeleteCategory={deleteCategory} onMoveCategory={moveCategory} onEditCategoryIcon={editCategoryIcon} /></div></div>;
+      categories={categories} onAddCategory={addCategory} onDeleteCategory={deleteCategory} onMoveCategory={moveCategory} onEditCategoryIcon={editCategoryIcon} />
+    <VersionFooter T={T}/></div></div>;
 
   if(view==="profile") return <div style={WRAP}><style>{GCSS}</style>
     {notif&&<Notif msg={notif} />}
@@ -2490,7 +2497,8 @@ export default function App() {
       onToggleOffer={toggleOffer} onDeleteOffer={deleteOffer}
       onUpdateProfile={updateProfile} onCreateInvite={createInvite}
       onCancelTx={cancelTx} onConfirmTx={confirmTx} onMarkDone={markDone} onSelectMember={goToMember}
-      reviews={reviews} onReview={setShowReviewFor} /></div></div>;
+      reviews={reviews} onReview={setShowReviewFor} />
+    <VersionFooter T={T}/></div></div>;
 
   return <div style={WRAP}><style>{GCSS}</style>
     {notif&&<Notif msg={notif} />}
@@ -2617,11 +2625,11 @@ export default function App() {
     <div style={{padding:"12px 20px",paddingBottom:80}} {...swipeMain}>
 
       {/* CAT FILTER */}
-      {(tab==="offers"||tab==="requests")&&<div style={{display:"flex",gap:7,overflowX:"auto",marginBottom:12,paddingBottom:4}}>
+      {(tab==="offers"||tab==="requests")&&<div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
         {(categories||CATEGORIES).map(c=><button key={c} onClick={()=>setCatFilter(c)} style={{
           background:catFilter===c?T.accent:T.card,border:`1px solid ${catFilter===c?T.accent:T.border}`,
           color:catFilter===c?"#fff":T.text2,padding:"4px 11px",borderRadius:20,fontSize:12,
-          fontWeight:500,whiteSpace:"nowrap",cursor:"pointer",fontFamily:"inherit"}}>{CAT_ICONS[c]} {c}</button>)}
+          fontWeight:500,cursor:"pointer",fontFamily:"inherit"}}>{CAT_ICONS[c]} {c}</button>)}
       </div>}
 
       {/* NEWS TAB */}
