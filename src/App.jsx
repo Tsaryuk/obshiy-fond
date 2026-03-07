@@ -150,6 +150,8 @@ const INIT_NEWS = [];
 const INIT_NOTIFICATIONS = [];
 
 const CATEGORIES = ["Все","Еда","Жильё","Здоровье","Знания","Транспорт","Дети","Культура"];
+const APP_VERSION = "1.2";
+
 let CAT_ICONS = {"Еда":"🌿","Жильё":"🏠","Здоровье":"💙","Знания":"📖","Транспорт":"🚗","Дети":"🌱","Культура":"🎵","Все":"✦"};
 const AV_COLORS = ["#7c6ff7","#f97316","#22c55e","#ec4899","#06b6d4","#eab308"];
 
@@ -405,6 +407,7 @@ function AuthScreen({ invites, members, accounts, onLogin, onRegister, T: T_prop
     <div style={{marginBottom:28,textAlign:"center"}}>
       <div style={{fontSize:44,marginBottom:8}}>🌾</div>
       <div style={{fontSize:26,fontWeight:700,letterSpacing:"-0.5px"}}>Общий фонд</div>
+      <div style={{fontSize:11,color:T?.text4||"#64748b",marginTop:2}}>v{APP_VERSION}</div>
       <div style={{fontSize:13,color:T.text4,marginTop:4}}>Сообщество взаимного обмена</div>
     </div>
     {mode==="login"&&<div style={{width:"100%",background:T.card,border:`1px solid ${T.border}`,borderRadius:20,padding:"24px 20px"}}>
@@ -537,14 +540,14 @@ function NetworkGraph({ members, transactions, invites, onSelectMember }) {
 // ─── NEG LIMIT EDITOR ────────────────────────────────────────────────────────
 function NegLimitEditor({ negLimit, onSetNegLimit, T }) {
   const [val, setVal] = useState(Math.abs(negLimit));
-  return <div style={{display:"flex",gap:8,alignItems:"center"}}>
-    <input type="number" min="0" max="1000" value={val} onChange={e=>setVal(Number(e.target.value))}
-      style={{flex:1,background:T.input,border:`1px solid ${T.border}`,borderRadius:10,color:T.text,
-        padding:"10px 14px",fontSize:15,fontFamily:"inherit",outline:"none"}} />
-    <span style={{fontSize:13,color:T.text3,flexShrink:0}}>{CUR.plural}</span>
-    <PB T={T} onClick={()=>onSetNegLimit(-Math.abs(val))} s={{flexShrink:0,padding:"10px 16px"}}>
-      Сохранить
-    </PB>
+  return <div style={{display:"flex",flexDirection:"column",gap:8}}>
+    <div style={{display:"flex",gap:8,alignItems:"center"}}>
+      <input type="number" min="0" max="1000" value={val} onChange={e=>setVal(Number(e.target.value))}
+        style={{flex:1,background:T.input,border:`1px solid ${T.border}`,borderRadius:10,color:T.text,
+          padding:"10px 14px",fontSize:15,fontFamily:"inherit",outline:"none"}} />
+      <span style={{fontSize:13,color:T.text3,flexShrink:0}}>{CUR.plural}</span>
+    </div>
+    <PB T={T} onClick={()=>onSetNegLimit(-Math.abs(val))}>Сохранить</PB>
   </div>;
 }
 
@@ -1845,7 +1848,7 @@ function ConstitutionScreen({ onBack, T }) {
         </div>
         {RULES.map((r,i)=><RuleCard key={i} rule={r} T={T} />)}
         <div style={{textAlign:"center",fontSize:11,color:T.text5,marginTop:12,fontFamily:"monospace"}}>
-          Правила v1.0 · Общий фонд 2025
+          Правила v{APP_VERSION} · Общий фонд 2025
         </div>
       </div>
     </div>
@@ -2746,7 +2749,7 @@ export default function App() {
                 <RoleBadge role={m.systemRole} />
                 {m.frozen&&<span style={{fontSize:10,color:T.text3}}>❄</span>}
               </div>
-              <div style={{fontSize:11,color:T.text4,marginTop:2}}>{m.profession||m.skills.join(" · ")}</div>
+              <div style={{fontSize:11,color:T.text4,marginTop:2}}>{m.profession||(m.skills||[]).join(" · ")}</div>
               {pot!==bal&&<div style={{fontSize:10,color:T.text5,marginTop:1}}>потенциал: {cur(pot)}</div>}
             </div>
             <div style={{display:"flex",alignItems:"center",gap:7}}>
