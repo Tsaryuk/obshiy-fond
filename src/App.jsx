@@ -150,7 +150,7 @@ const INIT_NEWS = [];
 const INIT_NOTIFICATIONS = [];
 
 const CATEGORIES = ["Все","Еда","Жильё","Здоровье","Знания","Транспорт","Дети","Культура"];
-const APP_VERSION = "1.4";
+const APP_VERSION = "1.5";
 const VersionFooter = ({T}) => <div style={{textAlign:"center",padding:"16px 0 8px",fontSize:10,color:T?.text5||"#1e2330",opacity:0.6,fontFamily:"monospace"}}>Общий фонд · v{APP_VERSION}</div>;
 
 let CAT_ICONS = {"Еда":"🌿","Жильё":"🏠","Здоровье":"💙","Знания":"📖","Транспорт":"🚗","Дети":"🌱","Культура":"🎵","Все":"✦"};
@@ -414,6 +414,7 @@ function AuthScreen({ invites, members, accounts, onLogin, onRegister, T: T_prop
   const [rBio,    setRBio]    = useState("");
   const [rTg,     setRTg]     = useState("");
   const [step,    setStep]    = useState(1);
+  const [registering, setRegistering] = useState(false);
 
   function doLogin() {
     const acc=accounts.find(a=>a.login===login.toLowerCase().trim()&&a.password===pass);
@@ -428,9 +429,11 @@ function AuthScreen({ invites, members, accounts, onLogin, onRegister, T: T_prop
     setError(""); setStep(2);
   }
   function doRegister() {
+    if(registering) return;
     if(!rName.trim()||!rLogin.trim()||!rPass.trim()){setError("Заполни все поля");return;}
     if(!/^[a-z0-9_]+$/.test(rLogin)){setError("Логин: только латинские буквы и цифры");return;}
     if(accounts.find(a=>a.login===rLogin.toLowerCase().trim())){setError("Логин занят");return;}
+    setRegistering(true);
     onRegister({invCode:invCode.trim().toUpperCase(),name:rName,login:rLogin.toLowerCase().trim(),
       password:rPass,profession:rProf,bio:rBio,telegram:rTg});
   }
@@ -499,7 +502,9 @@ function AuthScreen({ invites, members, accounts, onLogin, onRegister, T: T_prop
             background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:14}}>{showP?"🙈":"👁"}</button>
         </div>
         {error&&<div style={{fontSize:12,color:"#f87171",marginBottom:10}}>{error}</div>}
-        <PB onClick={doRegister} disabled={!rLogin||rPass.length<6}>Зарегистрироваться</PB>
+        <PB onClick={doRegister} disabled={!rLogin||rPass.length<6||registering}>
+          {registering ? "Создаём аккаунт…" : "Зарегистрироваться"}
+        </PB>
       </>}
       <div style={{textAlign:"center",marginTop:12,fontSize:13,color:T.text4}}>
         Есть аккаунт?{" "}<span onClick={()=>{setMode("login");setError("");}} style={{color:"#6366f1",cursor:"pointer"}}>Войти</span>
@@ -2184,6 +2189,9 @@ export default function App() {
   }
   async function handleRegister({invCode,name,login,password,profession,bio,telegram}){
     const inv=invites.find(i=>i.code===invCode&&!i.usedBy);if(!inv)return;
+    // Double-submit guard: check invite not already used in DB
+    const freshInvites = await sb.select("invites",`code=eq.${invCode}`);
+    if(freshInvites?.[0]?.used_by) return; // already registered
     const invitedBy=inv.createdBy||null;
     const initials=name.trim().split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2);
     const newId=uid();
