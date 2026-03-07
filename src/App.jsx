@@ -150,7 +150,7 @@ const INIT_NEWS = [];
 const INIT_NOTIFICATIONS = [];
 
 const CATEGORIES = ["Все","Еда","Жильё","Здоровье","Знания","Транспорт","Дети","Культура"];
-const APP_VERSION = "1.8";
+const APP_VERSION = "1.9";
 const VersionFooter = ({T}) => <div style={{textAlign:"center",padding:"16px 0 8px",fontSize:10,color:T?.text5||"#1e2330",opacity:0.6,fontFamily:"monospace"}}>Общий фонд · v{APP_VERSION}</div>;
 
 let CAT_ICONS = {"Еда":"🌿","Жильё":"🏠","Здоровье":"💙","Знания":"📖","Транспорт":"🚗","Дети":"🌱","Культура":"🎵","Все":"✦"};
@@ -2149,31 +2149,6 @@ export default function App() {
 
   // Pull-to-refresh state
   const scrollRef = useRef(null);
-  const ptrStartY = useRef(null);
-  const [ptrPull, setPtrPull] = useState(0);   // px pulled (0..80)
-  const [ptrDone, setPtrDone] = useState(false); // "refreshing" state
-  const PTR_THRESHOLD = 70;
-
-  const ptrTouchStart = useCallback(e => {
-    const el = scrollRef.current;
-    if(el && el.scrollTop === 0) ptrStartY.current = e.touches[0].clientY;
-  }, []);
-  const ptrTouchMove = useCallback(e => {
-    if(ptrStartY.current === null) return;
-    const dy = e.touches[0].clientY - ptrStartY.current;
-    if(dy > 0) setPtrPull(Math.min(dy * 0.5, 80));
-  }, []);
-  const ptrTouchEnd = useCallback(() => {
-    if(ptrPull >= PTR_THRESHOLD) {
-      setPtrDone(true);
-      setPtrPull(PTR_THRESHOLD);
-      setTimeout(() => window.location.reload(), 500);
-    } else {
-      setPtrPull(0);
-    }
-    ptrStartY.current = null;
-  }, [ptrPull]);
-
   const changeTab = useCallback((newTab, dir) => {
     setTabDir(dir);
     setTabKey(k=>k+1);
@@ -2760,34 +2735,7 @@ export default function App() {
       })}
     </div>
 
-    {/* PTR Indicator */}
-    {(ptrPull > 0 || ptrDone) && <div style={{
-      display:"flex", alignItems:"center", justifyContent:"center", gap:8,
-      height: ptrDone ? PTR_THRESHOLD : ptrPull,
-      transition: ptrDone ? "none" : "height 0.1s ease",
-      overflow:"hidden",
-    }}>
-      <div style={{
-        width:28, height:28, borderRadius:"50%",
-        background: T.card, border:`1.5px solid ${T.accent}`,
-        display:"flex", alignItems:"center", justifyContent:"center",
-        fontSize:14, color: T.accent,
-        transform: ptrDone ? "none" : `rotate(${Math.min(ptrPull/PTR_THRESHOLD,1)*180}deg)`,
-        animation: ptrDone ? "spin 0.6s linear infinite" : "none",
-        opacity: Math.min(ptrPull / 20, 1),
-      }}>
-        {ptrDone ? "↻" : "↓"}
-      </div>
-      <span style={{fontSize:12, color:T.text4, opacity: Math.min(ptrPull/20,1)}}>
-        {ptrDone ? "Обновляем…" : ptrPull >= PTR_THRESHOLD ? "Отпустите ↑" : "Потяните вниз"}
-      </span>
-    </div>}
-
-    <div ref={scrollRef}
-      onTouchStart={e=>{ptrTouchStart(e);swipeMain.onTouchStart?.(e);}}
-      onTouchMove={ptrTouchMove}
-      onTouchEnd={e=>{ptrTouchEnd(e);swipeMain.onTouchEnd?.(e);}}
-      style={{padding:"12px 20px",paddingBottom:80}}>
+    <div ref={scrollRef} style={{padding:"12px 20px",paddingBottom:80}} {...swipeMain}>
 
       <div key={tabKey} className={tabDir==="left"?"tab-enter-left":tabDir==="right"?"tab-enter-right":""}>
 
