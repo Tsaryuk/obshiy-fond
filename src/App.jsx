@@ -150,7 +150,7 @@ const INIT_NEWS = [];
 const INIT_NOTIFICATIONS = [];
 
 const CATEGORIES = ["Все","Еда","Жильё","Здоровье","Знания","Транспорт","Дети","Культура"];
-const APP_VERSION = "1.6";
+const APP_VERSION = "1.8";
 const VersionFooter = ({T}) => <div style={{textAlign:"center",padding:"16px 0 8px",fontSize:10,color:T?.text5||"#1e2330",opacity:0.6,fontFamily:"monospace"}}>Общий фонд · v{APP_VERSION}</div>;
 
 let CAT_ICONS = {"Еда":"🌿","Жильё":"🏠","Здоровье":"💙","Знания":"📖","Транспорт":"🚗","Дети":"🌱","Культура":"🎵","Все":"✦"};
@@ -1048,7 +1048,7 @@ function RequestForm({ onSave, onClose, T, categories: cats }) {
 }
 
 // ─── REQUEST DETAIL ───────────────────────────────────────────────────────────
-function RequestDetail({ request, members, meId, onAcceptBid, onDeclineBid, onBid, onClose, T }) {
+function RequestDetail({ request, members, meId, onAcceptBid, onDeclineBid, onBid, onClose, onChatWith, T }) {
   const author=findM(members,request.member);
   const isMe=request.member===meId;
   const myBid=request.bids.find(b=>b.from===meId);
@@ -1095,6 +1095,7 @@ function RequestDetail({ request, members, meId, onAcceptBid, onDeclineBid, onBi
       })}
     </div>
     {canBid&&!bidding&&<PB onClick={()=>setBidding(true)}>💬 Предложить свою цену</PB>}
+    {!isMe&&onChatWith&&<PB T={T} v="ghost" s={{marginTop:8}} onClick={()=>{onChatWith(request.member,`💬 По запросу «${request.title}»`);onClose();}}>✉️ Написать автору</PB>}
     {myBid&&myBid.status==="pending"&&<div style={{fontSize:13,color:"#fbbf24",textAlign:"center",padding:"8px",background:"#fbbf2410",borderRadius:8}}>
       Ваше предложение: {cur(myBid.price)} — ожидает ответа</div>}
     {bidding&&<div style={{marginTop:10,padding:"14px",background:T.card,borderRadius:14,border:`1px solid ${T.border}`}}>
@@ -1548,7 +1549,7 @@ function Lightbox({ src, onClose }) {
 
 // ─── CHAT SCREEN ─────────────────────────────────────────────────────────────
 // ─── CHAT SCREEN ─────────────────────────────────────────────────────────────
-function ChatScreen({ meId, members, messages, groupMessages, onSend, onBack, T, onSelectMember }) {
+function ChatScreen({ meId, members, messages, groupMessages, onSend, onBack, T, onSelectMember, initialPeerId, initialMsg }) {
   const [view, setView] = useState("list"); // "list" | "thread" | "group"
   const [peer, setPeer] = useState(null);
   const [text, setText] = useState("");
@@ -1557,6 +1558,15 @@ function ChatScreen({ meId, members, messages, groupMessages, onSend, onBack, T,
     if(view==="thread"||view==="group") setView("list");
     else onBack();
   });
+
+  // Auto-open thread if navigated from offer/request
+  useEffect(()=>{
+    if(initialPeerId){
+      const m = members.find(x=>x.id===initialPeerId);
+      if(m){ setPeer(m); setView("thread"); if(initialMsg) setText(initialMsg); }
+    }
+  // eslint-disable-next-line
+  },[initialPeerId]);
 
   const convs = members.filter(m=>m.id!==meId).map(m=>{
     const thread = messages.filter(msg=>(msg.from===meId&&msg.to===m.id)||(msg.from===m.id&&msg.to===meId));
@@ -1996,6 +2006,8 @@ export default function App() {
   const [catFilter,    setCatFilter]    = useState("Все");
   const [search,       setSearch]       = useState("");
   const [selOffer,     setSelOffer]     = useState(null);
+  const [chatInitPeer, setChatInitPeer] = useState(null); // pre-open chat with member
+  const [chatInitMsg,  setChatInitMsg]  = useState("");   // pre-fill message
   const [bookQty,      setBookQty]      = useState(1);
   const [txNote,       setTxNote]       = useState("");
   const [showGift,     setShowGift]     = useState(false);
@@ -2245,6 +2257,13 @@ export default function App() {
 
   // ── navigate to member ──
   function goToMember(id){const m=members.find(x=>x.id===id);if(!m)return;setProfileTarget(m);setView("profile");}
+
+  // ── open chat with pre-filled message ──
+  function openChatWith(peerId, prefillMsg=""){
+    setChatInitPeer(peerId);
+    setChatInitMsg(prefillMsg);
+    setView("chat");
+  }
 
   // ── offers ──
   async function addOffer(data){
@@ -2572,7 +2591,8 @@ export default function App() {
 
   if(view==="chat") return <div style={WRAP}><style>{GCSS}</style>{notif&&<Notif msg={notif}/>}
     <div style={INNER}><ChatScreen meId={meId} members={members} messages={messages}
-      onSend={sendMessage} onBack={goBack} groupMessages={groupMessages} T={T} onSelectMember={goToMember}/>
+      onSend={sendMessage} onBack={()=>{setChatInitPeer(null);setChatInitMsg("");goBack();}} groupMessages={groupMessages} T={T} onSelectMember={goToMember}
+      initialPeerId={chatInitPeer} initialMsg={chatInitMsg}/>
     <VersionFooter T={T}/></div></div>;
 
   if(view==="tasks") return <div style={WRAP}><style>{GCSS}</style>{notif&&<Notif msg={notif}/>}
@@ -2741,30 +2761,33 @@ export default function App() {
     </div>
 
     {/* PTR Indicator */}
-    <div style={{
+    {(ptrPull > 0 || ptrDone) && <div style={{
+      display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+      height: ptrDone ? PTR_THRESHOLD : ptrPull,
+      transition: ptrDone ? "none" : "height 0.1s ease",
       overflow:"hidden",
-      height: ptrPull,
-      transition: ptrDone ? "none" : (ptrPull===0 ? "height 0.3s ease" : "none"),
-      display:"flex", alignItems:"center", justifyContent:"center",
     }}>
       <div style={{
-        display:"flex", alignItems:"center", gap:8,
-        opacity: Math.min(ptrPull / PTR_THRESHOLD, 1),
-        transform: `rotate(${ptrDone ? 720 : (ptrPull/PTR_THRESHOLD)*180}deg)`,
-        transition: ptrDone ? "transform 0.5s ease" : "none",
-        fontSize:20, color: T.accent,
+        width:28, height:28, borderRadius:"50%",
+        background: T.card, border:`1.5px solid ${T.accent}`,
+        display:"flex", alignItems:"center", justifyContent:"center",
+        fontSize:14, color: T.accent,
+        transform: ptrDone ? "none" : `rotate(${Math.min(ptrPull/PTR_THRESHOLD,1)*180}deg)`,
+        animation: ptrDone ? "spin 0.6s linear infinite" : "none",
+        opacity: Math.min(ptrPull / 20, 1),
       }}>
-        {ptrDone ? "✓" : "↓"}
+        {ptrDone ? "↻" : "↓"}
       </div>
-      <span style={{
-        fontSize:12, color:T.text4, marginLeft:6,
-        opacity: Math.min(ptrPull / PTR_THRESHOLD, 1),
-      }}>{ptrDone ? "Обновляем…" : (ptrPull >= PTR_THRESHOLD ? "Отпустите" : "Потяните вниз")}</span>
-    </div>
+      <span style={{fontSize:12, color:T.text4, opacity: Math.min(ptrPull/20,1)}}>
+        {ptrDone ? "Обновляем…" : ptrPull >= PTR_THRESHOLD ? "Отпустите ↑" : "Потяните вниз"}
+      </span>
+    </div>}
 
     <div ref={scrollRef}
-      onTouchStart={ptrTouchStart} onTouchMove={ptrTouchMove} onTouchEnd={ptrTouchEnd}
-      style={{padding:"12px 20px",paddingBottom:80}} {...swipeMain}>
+      onTouchStart={e=>{ptrTouchStart(e);swipeMain.onTouchStart?.(e);}}
+      onTouchMove={ptrTouchMove}
+      onTouchEnd={e=>{ptrTouchEnd(e);swipeMain.onTouchEnd?.(e);}}
+      style={{padding:"12px 20px",paddingBottom:80}}>
 
       <div key={tabKey} className={tabDir==="left"?"tab-enter-left":tabDir==="right"?"tab-enter-right":""}>
 
@@ -3009,6 +3032,12 @@ export default function App() {
       <PB T={T} onClick={doBook} disabled={(selOffer.qty-selOffer.reserved)<bookQty||selOffer.member===meId}>
           {selOffer.member===meId?"Это ваше предложение":`Забронировать${bookQty>1?` ×${bookQty}`:""}`}
         </PB>
+      {selOffer.member!==meId&&<PB T={T} v="ghost" s={{marginTop:8}} onClick={()=>{
+        const seller=members.find(m=>m.id===selOffer.member);
+        const msg=`💬 По предложению «${selOffer.title}»`;
+        setSelOffer(null); setTxNote(""); setBookQty(1);
+        openChatWith(selOffer.member, msg);
+      }}>💬 Написать продавцу</PB>}
     </Sheet>}
 
     {/* GIFT SHEET */}
@@ -3039,7 +3068,8 @@ export default function App() {
       onAcceptBid={(rId,bId)=>{acceptBid(rId,bId);setOpenReq(null);}}
       onDeclineBid={declineBid}
       onBid={(rId,p,n)=>{addBid(rId,p,n);setOpenReq(requests.find(r=>r.id===rId)||openReq);}}
-      onClose={()=>setOpenReq(null)} />}
+      onClose={()=>setOpenReq(null)}
+      onChatWith={openChatWith} />}
     {lightbox&&<Lightbox src={lightbox} onClose={()=>setLightbox(null)} />}
     {showReviewFor&&<ReviewForm T={T} tx={showReviewFor} members={members} meId={meId}
       onSave={d=>{addReview(d);setShowReviewFor(null);}}
