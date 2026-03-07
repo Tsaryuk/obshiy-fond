@@ -150,7 +150,7 @@ const INIT_NEWS = [];
 const INIT_NOTIFICATIONS = [];
 
 const CATEGORIES = ["Все","Еда","Жильё","Здоровье","Знания","Транспорт","Дети","Культура"];
-const APP_VERSION = "1.5";
+const APP_VERSION = "1.6";
 const VersionFooter = ({T}) => <div style={{textAlign:"center",padding:"16px 0 8px",fontSize:10,color:T?.text5||"#1e2330",opacity:0.6,fontFamily:"monospace"}}>Общий фонд · v{APP_VERSION}</div>;
 
 let CAT_ICONS = {"Еда":"🌿","Жильё":"🏠","Здоровье":"💙","Знания":"📖","Транспорт":"🚗","Дети":"🌱","Культура":"🎵","Все":"✦"};
@@ -301,13 +301,15 @@ function Sheet({ onClose, children, T }) {
     setTimeout(onClose, 260);
   }, [onClose]);
 
-  const onTouchStart = useCallback(e => { startY.current = e.touches[0].clientY; }, []);
+  const onTouchStart = useCallback(e => { e.stopPropagation(); startY.current = e.touches[0].clientY; }, []);
   const onTouchMove = useCallback(e => {
+    e.stopPropagation();
     if(startY.current === null) return;
     const dy = e.touches[0].clientY - startY.current;
-    if(dy > 0) setDragY(dy);
+    if(dy > 0) { try{e.preventDefault();}catch(_){} setDragY(dy); }
   }, []);
   const onTouchEnd = useCallback(e => {
+    e.stopPropagation();
     if(startY.current === null) return;
     const dy = e.changedTouches[0].clientY - startY.current;
     if(dy > 60) { setDragY(0); doClose(); }
@@ -2135,6 +2137,30 @@ export default function App() {
 
   // Pull-to-refresh state
   const scrollRef = useRef(null);
+  const ptrStartY = useRef(null);
+  const [ptrPull, setPtrPull] = useState(0);   // px pulled (0..80)
+  const [ptrDone, setPtrDone] = useState(false); // "refreshing" state
+  const PTR_THRESHOLD = 70;
+
+  const ptrTouchStart = useCallback(e => {
+    const el = scrollRef.current;
+    if(el && el.scrollTop === 0) ptrStartY.current = e.touches[0].clientY;
+  }, []);
+  const ptrTouchMove = useCallback(e => {
+    if(ptrStartY.current === null) return;
+    const dy = e.touches[0].clientY - ptrStartY.current;
+    if(dy > 0) setPtrPull(Math.min(dy * 0.5, 80));
+  }, []);
+  const ptrTouchEnd = useCallback(() => {
+    if(ptrPull >= PTR_THRESHOLD) {
+      setPtrDone(true);
+      setPtrPull(PTR_THRESHOLD);
+      setTimeout(() => window.location.reload(), 500);
+    } else {
+      setPtrPull(0);
+    }
+    ptrStartY.current = null;
+  }, [ptrPull]);
 
   const changeTab = useCallback((newTab, dir) => {
     setTabDir(dir);
@@ -2714,7 +2740,31 @@ export default function App() {
       })}
     </div>
 
-    <div ref={scrollRef} style={{padding:"12px 20px",paddingBottom:80}} {...swipeMain}>
+    {/* PTR Indicator */}
+    <div style={{
+      overflow:"hidden",
+      height: ptrPull,
+      transition: ptrDone ? "none" : (ptrPull===0 ? "height 0.3s ease" : "none"),
+      display:"flex", alignItems:"center", justifyContent:"center",
+    }}>
+      <div style={{
+        display:"flex", alignItems:"center", gap:8,
+        opacity: Math.min(ptrPull / PTR_THRESHOLD, 1),
+        transform: `rotate(${ptrDone ? 720 : (ptrPull/PTR_THRESHOLD)*180}deg)`,
+        transition: ptrDone ? "transform 0.5s ease" : "none",
+        fontSize:20, color: T.accent,
+      }}>
+        {ptrDone ? "✓" : "↓"}
+      </div>
+      <span style={{
+        fontSize:12, color:T.text4, marginLeft:6,
+        opacity: Math.min(ptrPull / PTR_THRESHOLD, 1),
+      }}>{ptrDone ? "Обновляем…" : (ptrPull >= PTR_THRESHOLD ? "Отпустите" : "Потяните вниз")}</span>
+    </div>
+
+    <div ref={scrollRef}
+      onTouchStart={ptrTouchStart} onTouchMove={ptrTouchMove} onTouchEnd={ptrTouchEnd}
+      style={{padding:"12px 20px",paddingBottom:80}} {...swipeMain}>
 
       <div key={tabKey} className={tabDir==="left"?"tab-enter-left":tabDir==="right"?"tab-enter-right":""}>
 
