@@ -150,7 +150,7 @@ const INIT_NEWS = [];
 const INIT_NOTIFICATIONS = [];
 
 const CATEGORIES = ["Все","Еда","Жильё","Здоровье","Знания","Транспорт","Дети","Культура"];
-const APP_VERSION = "1.3";
+const APP_VERSION = "1.4";
 const VersionFooter = ({T}) => <div style={{textAlign:"center",padding:"16px 0 8px",fontSize:10,color:T?.text5||"#1e2330",opacity:0.6,fontFamily:"monospace"}}>Общий фонд · v{APP_VERSION}</div>;
 
 let CAT_ICONS = {"Еда":"🌿","Жильё":"🏠","Здоровье":"💙","Знания":"📖","Транспорт":"🚗","Дети":"🌱","Культура":"🎵","Все":"✦"};
@@ -1945,7 +1945,7 @@ function GiftMemberPicker({ members, meId, giftTo, setGiftTo, balances, T }) {
 const GCSS=`
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}::-webkit-scrollbar{display:none;}input,textarea{outline:none;}
-  html,body{background:#0d0f14;overscroll-behavior-y:none;}
+  html,body{background:#0d0f14;}
   @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
   @keyframes slideIn{from{opacity:0;transform:translateY(30px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
   @keyframes slideOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(100%)}}
@@ -2129,9 +2129,6 @@ export default function App() {
   const [tabKey, setTabKey] = useState(0); // force re-render for animation
 
   // Pull-to-refresh state
-  const [pullY, setPullY] = useState(0);
-  const [refreshing, setRefreshing] = useState(false);
-  const pullStartY = useRef(null);
   const scrollRef = useRef(null);
 
   const changeTab = useCallback((newTab, dir) => {
@@ -2146,7 +2143,6 @@ export default function App() {
   );
 
   const doRefresh = useCallback(async () => {
-    setRefreshing(true);
     try {
       const [rawNotifs, rawMsgs, rawTxs, rawOffers, rawRequests, rawBids] = await Promise.all([
         sb.select("notifications", `member_id=eq.${meId}&order=date.desc`),
@@ -2163,36 +2159,8 @@ export default function App() {
       setTransactions(rawTxs.map(toTx));
       setOffers(rawOffers.map(toOffer));
       setRequests(rawRequests.map(r=>toRequest(r, rawBids)));
-    } finally { setTimeout(()=>setRefreshing(false), 500); }
+    } catch(e) { console.error("refresh", e); }
   }, [meId]);
-
-  // Pull-to-refresh via window listeners
-  const pullYRef = useRef(0);
-  useEffect(() => {
-    if(!meId) return;
-    const onStart = e => {
-      if(window.scrollY <= 0) pullStartY.current = e.touches[0].clientY;
-    };
-    const onMove = e => {
-      if(pullStartY.current === null) return;
-      const dy = e.touches[0].clientY - pullStartY.current;
-      if(dy > 0) { const v = Math.min(dy * 0.45, 72); pullYRef.current = v; setPullY(v); }
-    };
-    const onEnd = () => {
-      if(pullYRef.current > 45) { setPullY(0); doRefresh(); }
-      else setPullY(0);
-      pullYRef.current = 0;
-      pullStartY.current = null;
-    };
-    window.addEventListener("touchstart", onStart, {passive:true});
-    window.addEventListener("touchmove", onMove, {passive:true});
-    window.addEventListener("touchend", onEnd, {passive:true});
-    return () => {
-      window.removeEventListener("touchstart", onStart);
-      window.removeEventListener("touchmove", onMove);
-      window.removeEventListener("touchend", onEnd);
-    };
-  }, [meId, doRefresh]);
 
   function notify(msg){setNotif(msg);setTimeout(()=>setNotif(null),2800);}
   async function addNotification(memberId,type,text){
@@ -2671,14 +2639,25 @@ export default function App() {
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 16px",
         borderBottom:`1px solid ${T.border}`,position:"sticky",top:0,background:T.card,zIndex:1}}>
         <span style={{fontSize:11,color:T.text4,fontWeight:600,letterSpacing:1,textTransform:"uppercase"}}>Уведомления</span>
-        {notifications.filter(n=>n.memberId===meId&&!n.read).length>0&&
-          <button onClick={async()=>{
-            const ids=notifications.filter(n=>n.memberId===meId&&!n.read).map(n=>n.id);
-            setNotifications(p=>p.map(x=>x.memberId===meId?{...x,read:true}:x));
-            for(const id of ids) await sb.update("notifications",{id},{read:true});
-          }}
-            style={{fontSize:11,background:"none",border:`1px solid ${T.border}`,color:T.text4,
-              padding:"2px 8px",borderRadius:6,cursor:"pointer",fontFamily:"inherit"}}>Все прочитаны</button>}
+        <div style={{display:"flex",gap:6}}>
+          {notifications.filter(n=>n.memberId===meId&&!n.read).length>0&&
+            <button onClick={async()=>{
+              const ids=notifications.filter(n=>n.memberId===meId&&!n.read).map(n=>n.id);
+              setNotifications(p=>p.map(x=>x.memberId===meId?{...x,read:true}:x));
+              for(const id of ids) await sb.update("notifications",{id},{read:true});
+            }}
+              style={{fontSize:11,background:"none",border:`1px solid ${T.border}`,color:T.text4,
+                padding:"2px 8px",borderRadius:6,cursor:"pointer",fontFamily:"inherit"}}>Прочитать все</button>}
+          {notifications.filter(n=>n.memberId===meId).length>0&&
+            <button onClick={async()=>{
+              const ids=notifications.filter(n=>n.memberId===meId).map(n=>n.id);
+              setNotifications(p=>p.filter(x=>x.memberId!==meId));
+              for(const id of ids) await sb.delete("notifications",{id});
+              setShowNotifs(false);
+            }}
+              style={{fontSize:11,background:"none",border:`1px solid #7f1d1d`,color:"#f87171",
+                padding:"2px 8px",borderRadius:6,cursor:"pointer",fontFamily:"inherit"}}>Очистить</button>}
+        </div>
       </div>
       {notifications.filter(n=>n.memberId===meId).length===0
         ?<div style={{padding:"16px 20px",fontSize:13,color:T.text5}}>Нет уведомлений</div>
@@ -2725,19 +2704,6 @@ export default function App() {
           {badge>0&&<span style={{marginLeft:4,fontSize:10,background:"#6366f130",color:"#818cf8",padding:"0 5px",borderRadius:8}}>{badge}</span>}
         </button>;
       })}
-    </div>
-
-    {/* PULL TO REFRESH */}
-    <div style={{
-      height: refreshing ? 44 : pullY > 0 ? pullY : 0,
-      display:"flex",alignItems:"center",justifyContent:"center",
-      overflow:"hidden",transition: pullY===0 ? "height 0.3s ease" : "none",
-      color:"#6366f1",fontSize:12,gap:6,
-    }}>
-      {refreshing
-        ? <><span style={{animation:"spin 0.8s linear infinite",display:"inline-block"}}>↻</span> Обновление…</>
-        : pullY > 30 ? <><span>↓</span> Отпусти для обновления</> : <span>↓</span>
-      }
     </div>
 
     <div ref={scrollRef} style={{padding:"12px 20px",paddingBottom:80}} {...swipeMain}>
