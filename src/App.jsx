@@ -407,7 +407,6 @@ function AuthScreen({ invites, members, accounts, onLogin, onRegister, T: T_prop
     <div style={{marginBottom:28,textAlign:"center"}}>
       <div style={{fontSize:44,marginBottom:8}}>🌾</div>
       <div style={{fontSize:26,fontWeight:700,letterSpacing:"-0.5px"}}>Общий фонд</div>
-      <div style={{fontSize:11,color:T?.text4||"#64748b",marginTop:2}}>v{APP_VERSION}</div>
       <div style={{fontSize:13,color:T.text4,marginTop:4}}>Сообщество взаимного обмена</div>
     </div>
     {mode==="login"&&<div style={{width:"100%",background:T.card,border:`1px solid ${T.border}`,borderRadius:20,padding:"24px 20px"}}>
@@ -967,14 +966,14 @@ function OfferForm({ initial, onSave, onClose, T }) {
           padding:"5px 11px",borderRadius:20,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{CAT_ICONS[c]} {c}</button>
       ))}
     </div>
-    <SL T={T}>Кол-во / Цена / Единица</SL>
-    <div style={{display:"flex",gap:8,marginBottom:11}}>
-      <input type="number" min="1" value={qty} onChange={e=>E(Number(e.target.value))} placeholder="Кол-во"
-        style={{flex:1,background:T?.input||"#0d0f14",border:`1px solid ${T?.border||"#1e2330"}`,borderRadius:10,color:T?.text||"#e2e8f0",padding:"10px",fontSize:13,fontFamily:"inherit",outline:"none"}} />
-      <input type="number" min="0" value={price} onChange={e=>C(Number(e.target.value))} placeholder="0=бесп."
-        style={{flex:1.2,background:T?.input||"#0d0f14",border:`1px solid ${T?.border||"#1e2330"}`,borderRadius:10,color:T?.text||"#e2e8f0",padding:"10px",fontSize:13,fontFamily:"inherit",outline:"none"}} />
+    <SL T={T}>Цена / Единица / Кол-во</SL>
+    <div style={{display:"flex",gap:7,marginBottom:11,width:"100%",boxSizing:"border-box"}}>
+      <input type="number" min="0" value={price} onChange={e=>C(Number(e.target.value))} placeholder="0"
+        style={{width:0,flex:2,minWidth:0,background:T?.input||"#0d0f14",border:`1px solid ${T?.border||"#1e2330"}`,borderRadius:10,color:T?.text||"#e2e8f0",padding:"10px 8px",fontSize:13,fontFamily:"inherit",outline:"none"}} />
       <input value={unit} onChange={e=>D(e.target.value)} placeholder="раз"
-        style={{flex:1,background:T?.input||"#0d0f14",border:`1px solid ${T?.border||"#1e2330"}`,borderRadius:10,color:T?.text||"#e2e8f0",padding:"10px",fontSize:13,fontFamily:"inherit",outline:"none"}} />
+        style={{width:0,flex:2,minWidth:0,background:T?.input||"#0d0f14",border:`1px solid ${T?.border||"#1e2330"}`,borderRadius:10,color:T?.text||"#e2e8f0",padding:"10px 8px",fontSize:13,fontFamily:"inherit",outline:"none"}} />
+      <input type="number" min="1" value={qty} onChange={e=>E(Number(e.target.value))} placeholder="кол-во"
+        style={{width:0,flex:2,minWidth:0,background:T?.input||"#0d0f14",border:`1px solid ${T?.border||"#1e2330"}`,borderRadius:10,color:T?.text||"#e2e8f0",padding:"10px 8px",fontSize:13,fontFamily:"inherit",outline:"none"}} />
     </div>
     <SL T={T}>Описание</SL><FI T={T} value={desc} onChange={F} placeholder="Расскажи подробнее…" multi />
     <PB T={T} onClick={()=>ok&&onSave({title,category,price,unit,qty,desc,photo})} disabled={!ok}>{initial?"Сохранить":"Добавить в фонд"}</PB>
@@ -2365,7 +2364,7 @@ export default function App() {
     if(text===null) { // mark-read call
       const unread=messages.filter(m=>m.to===meId&&m.from===to&&!m.read);
       setMessages(p=>p.map(m=>m.to===meId&&m.from===to?{...m,read:true}:m));
-      for(const msg of unread) sb.update("messages",{read:true},`id=eq.${msg.id}`);
+      for(const msg of unread) sb.update("messages",{id:msg.id},{read:true});
       return;
     }
     const now = new Date();
@@ -2555,7 +2554,7 @@ export default function App() {
           <button onClick={async()=>{
             const ids=notifications.filter(n=>n.memberId===meId&&!n.read).map(n=>n.id);
             setNotifications(p=>p.map(x=>x.memberId===meId?{...x,read:true}:x));
-            for(const id of ids) await sb.update("notifications",{read:true},`id=eq.${id}`);
+            for(const id of ids) await sb.update("notifications",{id},{read:true});
           }}
             style={{fontSize:11,background:"none",border:`1px solid ${T.border}`,color:T.text4,
               padding:"2px 8px",borderRadius:6,cursor:"pointer",fontFamily:"inherit"}}>Все прочитаны</button>}
@@ -2564,7 +2563,7 @@ export default function App() {
         ?<div style={{padding:"16px 20px",fontSize:13,color:T.text5}}>Нет уведомлений</div>
         :notifications.filter(n=>n.memberId===meId).slice(0,15).map(n=>(
           <div key={n.id} onClick={async()=>{
-              if(!n.read){ setNotifications(p=>p.map(x=>x.id===n.id?{...x,read:true}:x)); await sb.update("notifications",{read:true},`id=eq.${n.id}`); }
+              if(!n.read){ setNotifications(p=>p.map(x=>x.id===n.id?{...x,read:true}:x)); await sb.update("notifications",{id:n.id},{read:true}); }
             }}
             style={{padding:"10px 16px",borderBottom:`1px solid ${T.border}`,cursor:"pointer",
               background:n.read?"transparent":"#6366f108",display:"flex",gap:10,alignItems:"flex-start"}}
@@ -2819,7 +2818,7 @@ export default function App() {
           fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>💛 Подарить</button>
       </div>
       <div style={{marginTop:12,fontSize:10,color:T.text5,fontFamily:"monospace"}}>
-        v1.0 · {new Date().getFullYear()}
+        v{APP_VERSION} · {new Date().getFullYear()}
       </div>
     </div>
 
