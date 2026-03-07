@@ -151,7 +151,7 @@ const INIT_NEWS = [];
 const INIT_NOTIFICATIONS = [];
 
 const CATEGORIES = ["Все","Еда","Жильё","Здоровье","Знания","Транспорт","Дети","Культура"];
-const CAT_ICONS = {"Еда":"🌿","Жильё":"🏠","Здоровье":"💙","Знания":"📖","Транспорт":"🚗","Дети":"🌱","Культура":"🎵","Все":"✦"};
+let CAT_ICONS = {"Еда":"🌿","Жильё":"🏠","Здоровье":"💙","Знания":"📖","Транспорт":"🚗","Дети":"🌱","Культура":"🎵","Все":"✦"};
 const AV_COLORS = ["#7c6ff7","#f97316","#22c55e","#ec4899","#06b6d4","#eab308"];
 
 // ─── THEME ────────────────────────────────────────────────────────────────────
@@ -171,7 +171,8 @@ const THEMES = {
 // ─── WALLET & POTENTIAL ───────────────────────────────────────────────────────
 const walletNum = (id, joined) => {
   const yymm = (joined||"2024-03").replace("-","").slice(0,6);
-  return `ОФ-${yymm}-${String(id).padStart(4,"0")}`;
+  const num = String(id).replace(/\D/g,"") || String(id);
+  return `ОФ-${yymm}-${num.padStart(4,"0")}`;
 };
 const payPotential = (memberId, offers, balance) => {
   const offSum = offers
@@ -287,12 +288,16 @@ function QtyBar({ qty, reserved, T }) {
 
 function Sheet({ onClose, children, T }) {
   const bg = T?.card||"#131720"; const br = T?.border||"#1e2330";
+  const startY = useRef(null);
   return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",
     display:"flex",alignItems:"flex-end",zIndex:200,backdropFilter:"blur(4px)"}}
     onClick={e=>e.target===e.currentTarget&&onClose()}>
-    <div style={{background:bg,borderRadius:"20px 20px 0 0",padding:"24px 20px 36px",
-      width:"100%",border:`1px solid ${br}`,animation:"slideIn 0.25s ease",
-      maxHeight:"90vh",overflowY:"auto",color:T?.text||"#e2e8f0"}}>
+    <div
+      onTouchStart={e=>{ startY.current=e.touches[0].clientY; }}
+      onTouchEnd={e=>{ if(startY.current!==null && e.changedTouches[0].clientY - startY.current > 60) onClose(); startY.current=null; }}
+      style={{background:bg,borderRadius:"20px 20px 0 0",padding:"24px 20px 36px",
+        width:"100%",border:`1px solid ${br}`,animation:"slideIn 0.25s ease",
+        maxHeight:"90vh",overflowY:"auto",color:T?.text||"#e2e8f0"}}>
       <div style={{width:36,height:4,background:br,borderRadius:2,margin:"0 auto 20px"}} />
       {children}</div></div>;
 }
@@ -532,7 +537,7 @@ function NetworkGraph({ members, transactions, invites, onSelectMember }) {
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
 // ─── NEG LIMIT EDITOR ────────────────────────────────────────────────────────
 function NegLimitEditor({ negLimit, onSetNegLimit, T }) {
-  const [val, setVal] = React.useState(Math.abs(negLimit));
+  const [val, setVal] = useState(Math.abs(negLimit));
   return <div style={{display:"flex",gap:8,alignItems:"center"}}>
     <input type="number" min="0" max="1000" value={val} onChange={e=>setVal(Number(e.target.value))}
       style={{flex:1,background:T.input,border:`1px solid ${T.border}`,borderRadius:10,color:T.text,
@@ -546,7 +551,7 @@ function NegLimitEditor({ negLimit, onSetNegLimit, T }) {
 
 
 function AdminPanel({ members, offers, transactions, invites, balances, news, meId, T,
-  categories, onAddCategory, onDeleteCategory, onMoveCategory,
+  categories, onAddCategory, onDeleteCategory, onMoveCategory, onEditCategoryIcon,
   onCreateInvite, onBack, onSelectMember, onFreezeToggle, onDeleteMember,
   onSetRole, onAddNews, onDeleteNews, negLimit, onSetNegLimit }) {
 
@@ -818,6 +823,11 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
                 <div style={{fontWeight:600,fontSize:14,color:T.text}}>{cat}</div>
                 <div style={{fontSize:11,color:T.text4}}>{cnt} предложений</div>
               </div>
+              <input defaultValue={CAT_ICONS[cat]||"✦"}
+                onBlur={e=>{ const v=e.target.value.trim(); if(v&&onEditCategoryIcon) onEditCategoryIcon(cat,v); }}
+                style={{width:36,textAlign:"center",fontSize:18,background:T.input,
+                  border:`1px solid ${T.border}`,borderRadius:8,color:T.text,padding:"4px",
+                  fontFamily:"inherit",outline:"none",flexShrink:0}} title="Иконка" />
               {cnt===0&&<button onClick={()=>onDeleteCategory&&onDeleteCategory(cat)}
                 style={{background:"none",border:`1px solid ${T.border}`,color:"#f87171",
                   padding:"4px 9px",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>✕</button>}
@@ -1805,6 +1815,16 @@ function ConstitutionScreen({ onBack, T }) {
       text:"Если тебе нужна помощь — создай запрос. Участники могут откликнуться с предложением цены. Ты принимаешь лучшее предложение — и сразу создаётся сделка. Открытый запрос можно отменить в любой момент." },
     { icon:"🔒", title:"Инвайты и вступление",
       text:"В Общий фонд можно войти только по инвайт-коду от действующего участника. Это сохраняет доверие и качество сообщества. Каждый участник несёт ответственность за тех, кого пригласил." },
+    { icon:"🏡", title:"Живи по средствам",
+      text:["Основной принцип фонда: не бери больше, чем готов отдать.",
+            "",
+            "Отрицательный баланс — это не штраф, это обязательство перед сообществом. Ты взял ценность и обязан вернуть её в другой форме.",
+            "",
+            "• Не накапливай долг без плана как его закрыть",
+            "• Если баланс уходит в минус — выставляй предложения и берись за запросы",
+            "• Фонд существует на взаимности: каждое зерно доверия — это чья-то реальная услуга",
+            "",
+            "Участник с хроническим минусом без активных предложений может быть исключён из фонда."].join("\n") },
     { icon:"📊", title:"Прозрачность и реестр",
       text:"Все транзакции публичны и видны в Реестре. Балансы участников отображаются на их профилях. Это основа взаимного доверия — каждый видит, кто даёт и кто берёт." },
     { icon:"🌐", title:"Граф связей",
@@ -1886,6 +1906,7 @@ function GiftMemberPicker({ members, meId, giftTo, setGiftTo, balances, T }) {
 const GCSS=`
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}::-webkit-scrollbar{display:none;}input,textarea{outline:none;}
+  html,body{background:#0d0f14;overscroll-behavior-y:none;}
   @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
   @keyframes slideIn{from{opacity:0;transform:translateY(24px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
   @keyframes notif{0%{opacity:0;transform:translateX(-50%) translateY(-8px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-8px)}}
@@ -1894,8 +1915,14 @@ const GCSS=`
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [meId,         setMeId]         = useState(null);
-  const [themeKey,     setThemeKey]     = useState("dark");
-  const T = THEMES[themeKey];
+  const [themeKey, setThemeKey] = useState(()=>{
+    try { return localStorage.getItem("of_theme")||"dark"; } catch(e){ return "dark"; }
+  });
+  const T = THEMES[themeKey] || THEMES.dark;
+  useEffect(()=>{
+    try { localStorage.setItem("of_theme", themeKey); } catch(e){}
+    document.body.style.background = (THEMES[themeKey]||THEMES.dark).bg;
+  },[themeKey]);
   const [loading,      setLoading]      = useState(true);
   const [dbError,      setDbError]      = useState(null);
   const [accounts,     setAccounts]     = useState([]);
@@ -1928,11 +1955,6 @@ export default function App() {
   const [addingOff,    setAddingOff]    = useState(false);
   const [openReq,      setOpenReq]      = useState(null);
   const [showNotifs,   setShowNotifs]   = useState(false);
-  useEffect(()=>{
-    if(!showNotifs)return;
-    const t=setTimeout(()=>setShowNotifs(false),5000);
-    return ()=>clearTimeout(t);
-  },[showNotifs]);
   const [showConstitution, setShowConstitution] = useState(false);
   const [messages,     setMessages]     = useState([]); // {from, to, text, time, ts, read
   const [groupMessages,setGroupMessages]= useState([]);  // {from, text, time, ts}}
@@ -1995,6 +2017,7 @@ export default function App() {
         if(rawCats.length>0) {
           const catNames = rawCats.map(c=>c.name);
           setCategories(["Все", ...catNames]);
+          rawCats.forEach(c=>{ if(c.icon) CAT_ICONS[c.name]=c.icon; });
         }
 
         const negLimitSetting = rawSettings.find(s=>s.key==="neg_limit");
@@ -2338,7 +2361,9 @@ export default function App() {
   // ── chat ──
   async function sendMessage(from, to, text) {
     if(text===null) { // mark-read call
+      const unread=messages.filter(m=>m.to===meId&&m.from===to&&!m.read);
       setMessages(p=>p.map(m=>m.to===meId&&m.from===to?{...m,read:true}:m));
+      for(const msg of unread) sb.update("messages",{read:true},`id=eq.${msg.id}`);
       return;
     }
     const now = new Date();
@@ -2371,8 +2396,16 @@ export default function App() {
     const id=uid();
     const sortOrder=categories.length;
     await sb.insert("categories",{id,name:name.trim(),icon:icon||"✦",sort_order:sortOrder});
+    CAT_ICONS[name.trim()] = icon||"✦";
     setCategories(p=>[...p, name.trim()]);
     notify(`✓ Категория «${name.trim()}» добавлена`);
+  }
+  async function editCategoryIcon(name, icon) {
+    CAT_ICONS[name] = icon;
+    const cats = await sb.select("categories",`name=eq.${encodeURIComponent(name)}`);
+    if(cats[0]) await sb.update("categories",{icon},`id=eq.${cats[0].id}`);
+    setCategories(p=>[...p]); // force re-render
+    notify("✓ Иконка обновлена");
   }
   async function deleteCategory(name) {
     const cats=await sb.select("categories",`name=eq.${encodeURIComponent(name)}`);
@@ -2446,7 +2479,7 @@ export default function App() {
               await sb.upsert("settings",{key:"neg_limit",value:String(v)},"key");
               setNegLimit(v);
             }}
-      categories={categories} onAddCategory={addCategory} onDeleteCategory={deleteCategory} onMoveCategory={moveCategory} /></div></div>;
+      categories={categories} onAddCategory={addCategory} onDeleteCategory={deleteCategory} onMoveCategory={moveCategory} onEditCategoryIcon={editCategoryIcon} /></div></div>;
 
   if(view==="profile") return <div style={WRAP}><style>{GCSS}</style>
     {notif&&<Notif msg={notif} />}
@@ -2517,14 +2550,20 @@ export default function App() {
         borderBottom:`1px solid ${T.border}`,position:"sticky",top:0,background:T.card,zIndex:1}}>
         <span style={{fontSize:11,color:T.text4,fontWeight:600,letterSpacing:1,textTransform:"uppercase"}}>Уведомления</span>
         {notifications.filter(n=>n.memberId===meId&&!n.read).length>0&&
-          <button onClick={()=>setNotifications(p=>p.map(x=>x.memberId===meId?{...x,read:true}:x))}
+          <button onClick={async()=>{
+            const ids=notifications.filter(n=>n.memberId===meId&&!n.read).map(n=>n.id);
+            setNotifications(p=>p.map(x=>x.memberId===meId?{...x,read:true}:x));
+            for(const id of ids) await sb.update("notifications",{read:true},`id=eq.${id}`);
+          }}
             style={{fontSize:11,background:"none",border:`1px solid ${T.border}`,color:T.text4,
               padding:"2px 8px",borderRadius:6,cursor:"pointer",fontFamily:"inherit"}}>Все прочитаны</button>}
       </div>
       {notifications.filter(n=>n.memberId===meId).length===0
         ?<div style={{padding:"16px 20px",fontSize:13,color:T.text5}}>Нет уведомлений</div>
         :notifications.filter(n=>n.memberId===meId).slice(0,15).map(n=>(
-          <div key={n.id} onClick={()=>setNotifications(p=>p.map(x=>x.id===n.id?{...x,read:true}:x))}
+          <div key={n.id} onClick={async()=>{
+              if(!n.read){ setNotifications(p=>p.map(x=>x.id===n.id?{...x,read:true}:x)); await sb.update("notifications",{read:true},`id=eq.${n.id}`); }
+            }}
             style={{padding:"10px 16px",borderBottom:`1px solid ${T.border}`,cursor:"pointer",
               background:n.read?"transparent":"#6366f108",display:"flex",gap:10,alignItems:"flex-start"}}
             onMouseEnter={e=>e.currentTarget.style.background=T.border}
