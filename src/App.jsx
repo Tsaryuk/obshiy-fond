@@ -11,6 +11,7 @@ import AdminPanel from "./components/AdminPanel";
 import ChatScreen from "./components/ChatScreen";
 import ProfileScreen from "./components/ProfileScreen";
 import MyTasksScreen from "./components/MyTasksScreen";
+import DealsScreen from "./components/DealsScreen";
 import ConstitutionScreen from "./components/ConstitutionScreen";
 import NetworkGraph from "./components/NetworkGraph";
 import Lightbox from "./components/Lightbox";
@@ -453,6 +454,18 @@ export default function App() {
     notify("✓ Отклик отозван");
   }
 
+  // ── disputes ──
+  async function openDispute(txId, reason){
+    const tx=transactions.find(t=>t.id===txId);if(!tx)return;
+    const otherId=tx.from===meId?tx.to:tx.from;
+    // Notify moderators
+    members.filter(m=>m.systemRole==="admin"||m.systemRole==="moderator").forEach(mod=>{
+      addNotification(mod.id,"dispute",`Спор по сделке «${tx.what}»: ${reason}`);
+    });
+    addNotification(otherId,"dispute",`${me.name} открыл спор по сделке «${tx.what}»`);
+    notify("⚖️ Спор отправлен модераторам");
+  }
+
   // ── profile ──
   async function updateProfile(id,data){
     const dbData={};
@@ -652,7 +665,7 @@ export default function App() {
   const TAB_BAR_ITEMS = [
     {key:"main", icon:"🏠", iconActive:"🏠", label:"Главная"},
     {key:"chat", icon:"💬", iconActive:"💬", label:"Чат"},
-    {key:"tasks", icon:"📋", iconActive:"📋", label:"Задачи"},
+    {key:"tasks", icon:"📋", iconActive:"📋", label:"Сделки"},
     {key:"profile", icon:"👤", iconActive:"👤", label:"Профиль"},
   ];
   const BottomTabBar = () => (
@@ -692,9 +705,9 @@ export default function App() {
     <VersionFooter T={T}/></div><BottomTabBar /></div>;
 
   if(view==="tasks") return <div style={WRAP}><style>{GCSS}</style>{notif&&<Notif msg={notif}/>}
-    <div style={{...INNER,paddingBottom:"calc(var(--nav-height) + var(--safe-area-bottom) + 8px)"}}><MyTasksScreen meId={meId} members={members} transactions={transactions}
+    <div style={{...INNER,paddingBottom:"calc(var(--nav-height) + var(--safe-area-bottom) + 8px)"}}><DealsScreen meId={meId} members={members} transactions={transactions}
       requests={requests} T={T} onBack={goBack}
-      onConfirmTx={confirmTx} onCancelTx={cancelTx} onMarkDone={markDone} onCancelRequest={cancelRequest} onCancelBid={cancelBid} onSelectMember={goToMember} onOpenReq={(r)=>{setOpenReq(r);setView("main");}} reviews={reviews} onReview={setShowReviewFor}/>
+      onConfirmTx={confirmTx} onCancelTx={cancelTx} onMarkDone={markDone} onCancelRequest={cancelRequest} onCancelBid={cancelBid} onSelectMember={goToMember} onOpenReq={(r)=>{setOpenReq(r);setView("main");}} reviews={reviews} onReview={setShowReviewFor} onOpenDispute={openDispute}/>
     <VersionFooter T={T}/></div><BottomTabBar /></div>;
 
   if(view==="admin") return <div style={WRAP}><style>{GCSS}</style>
