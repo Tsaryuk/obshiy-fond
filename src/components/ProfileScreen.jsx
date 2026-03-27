@@ -51,7 +51,8 @@ function DemurrageInfo({ memberId, balances, transactions, T }) {
 function ProfileScreen({ member, members, offers, transactions, balances, invites, meId, T,
   reviews, onReview, categories,
   onBack, onAddOffer, onEditOffer, onToggleOffer, onDeleteOffer,
-  onUpdateProfile, onCreateInvite, onCancelTx, onConfirmTx, onSelectMember }) {
+  onUpdateProfile, onCreateInvite, onCancelTx, onConfirmTx, onSelectMember,
+  onOpenNotifSettings }) {
 
   const [ptab,A]=useState("fund");
   const [addOff,B]=useState(false); const [editOff,C]=useState(null); const [editMode,D]=useState(false);
@@ -108,7 +109,10 @@ function ProfileScreen({ member, members, offers, transactions, balances, invite
           </div>}
           {member.frozen&&<div style={{fontSize:12,color:T.text2,marginTop:4}}>❄ Аккаунт заморожен</div>}
         </div>
-        {isMe&&!editMode&&<button onClick={()=>D(true)} style={{background:T.border,border:"none",color:"#6366f1",padding:"5px 11px",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Изменить</button>}
+        {isMe&&!editMode&&<div style={{display:"flex",gap:6,flexShrink:0}}>
+          {onOpenNotifSettings&&<button onClick={onOpenNotifSettings} style={{background:T.border,border:"none",color:T.text3,padding:"5px 9px",borderRadius:8,fontSize:14,cursor:"pointer",fontFamily:"inherit"}} title="Уведомления">🔔</button>}
+          <button onClick={()=>D(true)} style={{background:T.border,border:"none",color:"#6366f1",padding:"5px 11px",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Изменить</button>
+        </div>}
       </div>
 
       {editMode&&<div style={{marginTop:12}}>

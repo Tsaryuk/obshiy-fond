@@ -20,6 +20,7 @@ import RequestForm from "./components/forms/RequestForm";
 import RequestDetail from "./components/forms/RequestDetail";
 import ReviewForm from "./components/forms/ReviewForm";
 import GiftMemberPicker from "./components/forms/GiftMemberPicker";
+import NotificationSettings from "./components/NotificationSettings";
 export default function App() {
   const [meId,         setMeId]         = useState(null);
   const [themeKey, setThemeKey] = useState(()=>{
@@ -733,7 +734,14 @@ export default function App() {
       onToggleOffer={toggleOffer} onDeleteOffer={deleteOffer}
       onUpdateProfile={updateProfile} onCreateInvite={createInvite}
       onCancelTx={cancelTx} onConfirmTx={confirmTx} onMarkDone={markDone} onSelectMember={goToMember}
-      reviews={reviews} onReview={setShowReviewFor} />
+      reviews={reviews} onReview={setShowReviewFor}
+      onOpenNotifSettings={()=>setView("notifSettings")} />
+    <VersionFooter T={T}/></div><BottomTabBar /></div>;
+
+  if(view==="notifSettings") return <div style={WRAP}><style>{GCSS}</style>
+    {notif&&<Notif msg={notif} />}
+    <div style={{...INNER,paddingBottom:"calc(var(--nav-height) + var(--safe-area-bottom) + 8px)"}}>
+      <NotificationSettings meId={meId} T={T} onBack={goBack} notify={notify} />
     <VersionFooter T={T}/></div><BottomTabBar /></div>;
 
   return <div style={WRAP}><style>{GCSS}</style>
