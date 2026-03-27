@@ -1,4 +1,4 @@
-const CACHE_NAME = 'obshiy-fond-v2';
+const CACHE_NAME = 'obshiy-fond-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
