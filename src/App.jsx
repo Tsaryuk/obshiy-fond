@@ -631,14 +631,13 @@ export default function App() {
   }
 
   if(loading) return (
-    <div style={{background:"#0d0f14",minHeight:"100vh",display:"flex",flexDirection:"column",
-      alignItems:"center",justifyContent:"center",gap:16,fontFamily:"DM Sans,sans-serif"}}>
+    <div className="flex-col items-center justify-center" style={{minHeight:"100vh",gap:16}}>
       <div style={{fontSize:48}}>🌾</div>
-      <div style={{fontSize:18,fontWeight:700,color:"#e2e8f0"}}>Общий фонд</div>
+      <div style={{fontSize:"var(--text-xl)",fontWeight:700}}>Общий фонд</div>
       {dbError
-        ? <div style={{color:"#f87171",fontSize:13,textAlign:"center",maxWidth:280,lineHeight:1.5}}>{dbError}<br/><br/>
-            <span style={{fontSize:11,color:"#475569"}}>Проверь ключи Supabase в коде (SUPA_URL, SUPA_KEY)</span></div>
-        : <div style={{color:"#475569",fontSize:13}}>Загрузка данных…</div>
+        ? <div style={{color:"var(--color-danger)",fontSize:"var(--text-sm)",textAlign:"center",maxWidth:280,lineHeight:1.5}}>{dbError}<br/><br/>
+            <span style={{fontSize:"var(--text-xs)",color:"var(--color-text-muted)"}}>Проверь ключи Supabase в коде (SUPA_URL, SUPA_KEY)</span></div>
+        : <div style={{color:"var(--color-text-muted)",fontSize:"var(--text-sm)"}}>Загрузка данных…</div>
       }
     </div>
   );
@@ -659,7 +658,7 @@ export default function App() {
   const pinnedNews=news.filter(n=>n.pinned);
   const allNews=[...news].sort((a,b)=>b.pinned-a.pinned);
 
-  const WRAP={minHeight:"100dvh",background:T.bg,color:T.text,fontFamily:"var(--font-sans)"};
+  const WRAP={minHeight:"100dvh"};
   const INNER={maxWidth:520,margin:"0 auto",position:"relative"};
 
   // ─── BOTTOM TAB BAR ──
@@ -703,13 +702,13 @@ export default function App() {
       onSend={sendMessage} onEdit={editMessage} onDelete={deleteMessage}
       onBack={()=>{setChatInitPeer(null);setChatInitMsg("");goBack();}} groupMessages={groupMessages} T={T} onSelectMember={goToMember}
       initialPeerId={chatInitPeer} initialMsg={chatInitMsg}/>
-    <VersionFooter T={T}/></div><BottomTabBar /></div>;
+    <VersionFooter/></div><BottomTabBar /></div>;
 
   if(view==="tasks") return <div style={WRAP}><style>{GCSS}</style>{notif&&<Notif msg={notif}/>}
     <div style={{...INNER,paddingBottom:"calc(var(--nav-height) + var(--safe-area-bottom) + 8px)"}}><DealsScreen meId={meId} members={members} transactions={transactions}
       requests={requests} T={T} onBack={goBack}
       onConfirmTx={confirmTx} onCancelTx={cancelTx} onMarkDone={markDone} onCancelRequest={cancelRequest} onCancelBid={cancelBid} onSelectMember={goToMember} onOpenReq={(r)=>{setOpenReq(r);setView("main");}} reviews={reviews} onReview={setShowReviewFor} onOpenDispute={openDispute}/>
-    <VersionFooter T={T}/></div><BottomTabBar /></div>;
+    <VersionFooter/></div><BottomTabBar /></div>;
 
   if(view==="admin") return <div style={WRAP}><style>{GCSS}</style>
     {notif&&<Notif msg={notif} />}
@@ -723,7 +722,7 @@ export default function App() {
               setNegLimit(v);
             }}
       categories={categories} onAddCategory={addCategory} onDeleteCategory={deleteCategory} onMoveCategory={moveCategory} onEditCategoryIcon={editCategoryIcon} />
-    <VersionFooter T={T}/></div><BottomTabBar /></div>;
+    <VersionFooter/></div><BottomTabBar /></div>;
 
   if(view==="profile") return <div style={WRAP}><style>{GCSS}</style>
     {notif&&<Notif msg={notif} />}
@@ -736,58 +735,51 @@ export default function App() {
       onCancelTx={cancelTx} onConfirmTx={confirmTx} onMarkDone={markDone} onSelectMember={goToMember}
       reviews={reviews} onReview={setShowReviewFor}
       onOpenNotifSettings={()=>setView("notifSettings")} />
-    <VersionFooter T={T}/></div><BottomTabBar /></div>;
+    <VersionFooter/></div><BottomTabBar /></div>;
 
   if(view==="notifSettings") return <div style={WRAP}><style>{GCSS}</style>
     {notif&&<Notif msg={notif} />}
     <div style={{...INNER,paddingBottom:"calc(var(--nav-height) + var(--safe-area-bottom) + 8px)"}}>
       <NotificationSettings meId={meId} T={T} onBack={goBack} notify={notify} />
-    <VersionFooter T={T}/></div><BottomTabBar /></div>;
+    <VersionFooter/></div><BottomTabBar /></div>;
 
   return <div style={WRAP}><style>{GCSS}</style>
     {notif&&<Notif msg={notif} />}
     <div style={{...INNER,paddingBottom:"calc(var(--nav-height) + var(--safe-area-bottom) + 8px)"}}>
-    {/* HEADER — modernized */}
-    <div className="header" style={{padding:"14px 20px 10px",borderBottom:`1px solid ${T.border}`,flexDirection:"column",gap:0}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",width:"100%"}}>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
+    {/* HEADER */}
+    <div className="header" style={{padding:"14px 20px 10px",borderBottom:"1px solid var(--color-border)",flexDirection:"column",gap:0}}>
+      <div className="flex justify-between items-center w-full">
+        <div className="flex items-center gap-3">
           <div style={{fontSize:28,lineHeight:1}}>🌾</div>
           <div>
-            <div style={{fontSize:18,fontWeight:700,letterSpacing:"-0.5px",color:T.text,lineHeight:1.2}}>Общий фонд</div>
-            <div style={{fontSize:11,color:T.text4,marginTop:1}}>{members.length} участников</div>
+            <div style={{fontSize:"var(--text-xl)",fontWeight:700,letterSpacing:"var(--tracking-tight)",lineHeight:1.2}}>Общий фонд</div>
+            <div style={{fontSize:"var(--text-xs)",color:"var(--color-text-muted)",marginTop:1}}>{members.length} участников</div>
           </div>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <Pill T={T} balance={myBalance} />
-          <div style={{display:"flex",gap:4,alignItems:"center"}}>
-            <button onClick={()=>setThemeKey(k=>k==="dark"?"light":"dark")} className="btn-icon" style={{
-              width:34,height:34,borderRadius:10,background:T.card,border:`1px solid ${T.border}`,
-              color:T.text2,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"
-            }}>{themeKey==="dark"?"☀️":"🌙"}</button>
-            <button onClick={()=>setShowNotifs(!showNotifs)} style={{
-              position:"relative",width:34,height:34,borderRadius:10,background:T.card,border:`1px solid ${T.border}`,
-              color:T.text2,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"
-            }}>🔔
-              {myNotifs.length>0&&<span style={{position:"absolute",top:-3,right:-3,minWidth:16,height:16,borderRadius:8,background:"#f97316",color:"#fff",fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px"}}>{myNotifs.length}</span>}
+        <div className="flex items-center gap-2">
+          <Pill balance={myBalance} />
+          <div className="flex items-center gap-1">
+            <button className="btn-icon" onClick={()=>setThemeKey(k=>k==="dark"?"light":"dark")}
+              style={{width:34,height:34,borderRadius:"var(--radius-md)"}}>{themeKey==="dark"?"☀️":"🌙"}</button>
+            <button className="btn-icon" onClick={()=>setShowNotifs(!showNotifs)}
+              style={{width:34,height:34,borderRadius:"var(--radius-md)",position:"relative"}}>🔔
+              {myNotifs.length>0&&<span className="conv-unread" style={{top:-3,right:-3,background:"var(--color-orange)"}}>{myNotifs.length}</span>}
             </button>
-            <button onClick={handleLogout} style={{
-              height:34,borderRadius:10,background:T.card,border:`1px solid ${T.border}`,color:T.text4,
-              padding:"0 10px",fontSize:11,cursor:"pointer",fontFamily:"inherit",flexShrink:0
-            }}>Выйти</button>
+            <button className="btn btn-sm btn-ghost" onClick={handleLogout} style={{height:34}}>Выйти</button>
           </div>
         </div>
       </div>
-      {myBalance>DEMURRAGE_THRESHOLD&&<div style={{fontSize:10,color:"#fb923c",textAlign:"right",marginTop:2,width:"100%"}}>
+      {myBalance>DEMURRAGE_THRESHOLD&&<div style={{fontSize:"var(--text-2xs)",color:"var(--color-orange)",textAlign:"right",marginTop:2,width:"100%"}}>
         демередж: -{cur(calcDemurrage(myBalance,1))}/мес
       </div>}
     </div>
 
     {/* NOTIFICATIONS DROPDOWN */}
-    {showNotifs&&<div style={{position:"sticky",top:118,background:T.card,border:`1px solid ${T.border}`,
+    {showNotifs&&<div style={{position:"sticky",top:118,background:"var(--color-surface)",border:`1px solid ${"var(--color-border)"}`,
       borderRadius:0,borderLeft:"none",borderRight:"none",zIndex:45,maxHeight:260,overflowY:"auto"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 16px",
-        borderBottom:`1px solid ${T.border}`,position:"sticky",top:0,background:T.card,zIndex:1}}>
-        <span style={{fontSize:11,color:T.text4,fontWeight:600,letterSpacing:1,textTransform:"uppercase"}}>Уведомления</span>
+        borderBottom:`1px solid ${"var(--color-border)"}`,position:"sticky",top:0,background:"var(--color-surface)",zIndex:1}}>
+        <span style={{fontSize:11,color:"var(--color-text-muted)",fontWeight:600,letterSpacing:1,textTransform:"uppercase"}}>Уведомления</span>
         <div style={{display:"flex",gap:6}}>
           {notifications.filter(n=>n.memberId===meId&&!n.read).length>0&&
             <button onClick={async()=>{
@@ -795,7 +787,7 @@ export default function App() {
               setNotifications(p=>p.map(x=>x.memberId===meId?{...x,read:true}:x));
               for(const id of ids) await sb.update("notifications",{id},{read:true});
             }}
-              style={{fontSize:11,background:"none",border:`1px solid ${T.border}`,color:T.text4,
+              style={{fontSize:11,background:"none",border:`1px solid ${"var(--color-border)"}`,color:"var(--color-text-muted)",
                 padding:"2px 8px",borderRadius:6,cursor:"pointer",fontFamily:"inherit"}}>Прочитать все</button>}
           {notifications.filter(n=>n.memberId===meId).length>0&&
             <button onClick={async()=>{
@@ -809,19 +801,19 @@ export default function App() {
         </div>
       </div>
       {notifications.filter(n=>n.memberId===meId).length===0
-        ?<div style={{padding:"16px 20px",fontSize:13,color:T.text5}}>Нет уведомлений</div>
+        ?<div style={{padding:"16px 20px",fontSize:13,color:"var(--color-text-faint)"}}>Нет уведомлений</div>
         :notifications.filter(n=>n.memberId===meId).slice(0,15).map(n=>(
           <div key={n.id} onClick={async()=>{
               if(!n.read){ setNotifications(p=>p.map(x=>x.id===n.id?{...x,read:true}:x)); await sb.update("notifications",{id:n.id},{read:true}); }
             }}
-            style={{padding:"10px 16px",borderBottom:`1px solid ${T.border}`,cursor:"pointer",
+            style={{padding:"10px 16px",borderBottom:`1px solid ${"var(--color-border)"}`,cursor:"pointer",
               background:n.read?"transparent":"#6366f108",display:"flex",gap:10,alignItems:"flex-start"}}
-            onMouseEnter={e=>e.currentTarget.style.background=T.border}
+            onMouseEnter={e=>e.currentTarget.style.background="var(--color-border)"}
             onMouseLeave={e=>e.currentTarget.style.background=n.read?"transparent":"#6366f108"}>
             <span style={{fontSize:16,opacity:n.read?0.5:1}}>{n.type==="gift"?"💛":n.type==="booking"?"📦":n.type==="bid"?"💬":n.type==="accepted"?"✅":"🔔"}</span>
             <div style={{flex:1}}>
-              <div style={{fontSize:13,color:n.read?T.text3:T.text,lineHeight:1.4}}>{n.text}</div>
-              <div style={{fontSize:10,color:T.text5,marginTop:2,fontFamily:"monospace"}}>{n.date}</div>
+              <div style={{fontSize:13,color:n.read?"var(--color-text-tertiary)":"var(--color-text-primary)",lineHeight:1.4}}>{n.text}</div>
+              <div style={{fontSize:10,color:"var(--color-text-faint)",marginTop:2,fontFamily:"monospace"}}>{n.date}</div>
             </div>
             {!n.read&&<div style={{width:7,height:7,borderRadius:"50%",background:"#f97316",flexShrink:0,marginTop:4}} />}
           </div>
@@ -829,28 +821,23 @@ export default function App() {
     </div>}
 
     {/* SEARCH */}
-    <div style={{padding:"9px 20px 0",position:"sticky",top:118,background:T.bg,zIndex:40}}>
-      <div style={{position:"relative"}}>
-        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Поиск по названию, категории…"
-          style={{width:"100%",background:T.card,border:`1px solid ${T.border}`,borderRadius:10,
-            color:T.text,padding:"9px 14px 9px 32px",fontSize:13,fontFamily:"inherit",outline:"none"}} />
-        <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:T.text5,fontSize:13}}>🔍</span>
-        {search&&<button onClick={()=>setSearch("")} style={{position:"absolute",right:9,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:15}}>×</button>}
+    <div style={{padding:"9px 20px 0",position:"sticky",top:118,background:"var(--color-bg)",zIndex:40}}>
+      <div className="search-wrap">
+        <input className="search-input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Поиск по названию, категории…" />
+        <span className="search-icon">🔍</span>
+        {search&&<button className="search-clear" onClick={()=>setSearch("")}>×</button>}
       </div>
     </div>
 
     {/* TABS */}
-    <div style={{display:"flex",padding:"0 20px",borderBottom:`1px solid ${T.border}`,position:"sticky",top:157,background:T.bg,zIndex:39,marginTop:8,overflowX:"auto"}}>
+    <div className="htabs" style={{top:157,marginTop:8}}>
       {TABS_DEF.map(t=>{
         const badge=t.key==="requests"?requests.filter(r=>r.status==="open").length
           :t.key==="news"?pinnedNews.length:0;
-        return <button key={t.key} onClick={()=>changeTab(t.key, tabKeys.indexOf(t.key) > tabIdx ? "left" : "right")} style={{
-          background:"none",border:"none",padding:"10px 0",marginRight:16,fontSize:12,
-          fontWeight:tab===t.key?600:400,color:tab===t.key?T.text:T.text4,
-          borderBottom:tab===t.key?`2px solid ${T.accent}`:"2px solid transparent",
-          cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",position:"relative"}}>
+        return <button key={t.key} onClick={()=>changeTab(t.key, tabKeys.indexOf(t.key) > tabIdx ? "left" : "right")}
+          className={`htab${tab===t.key?" htab-active":""}`}>
           {t.l}
-          {badge>0&&<span style={{marginLeft:4,fontSize:10,background:"#6366f130",color:"#818cf8",padding:"0 5px",borderRadius:8}}>{badge}</span>}
+          {badge>0&&<span className="htab-badge">{badge}</span>}
         </button>;
       })}
     </div>
@@ -867,32 +854,30 @@ export default function App() {
       </div>}
 
       {/* NEWS TAB */}
-      {tab==="news"&&<div style={{animation:"fadeUp 0.3s ease"}}>
-        <div onClick={()=>setShowConstitution(true)} style={{display:"flex",alignItems:"center",gap:10,
-          background:"#6366f115",border:"1px solid #6366f130",borderRadius:13,padding:"12px 15px",
-          marginBottom:12,cursor:"pointer"}}
-          onMouseEnter={e=>e.currentTarget.style.background="#6366f120"}
-          onMouseLeave={e=>e.currentTarget.style.background="#6366f115"}>
+      {tab==="news"&&<div className="anim-fade-up">
+        <div className="conv-forum" onClick={()=>setShowConstitution(true)}>
           <div style={{fontSize:22}}>📜</div>
-          <div style={{flex:1}}>
-            <div style={{fontWeight:600,fontSize:14,color:"#818cf8"}}>Правила Общего фонда</div>
-            <div style={{fontSize:11,color:T.text4,marginTop:1}}>Как работает система · Демередж · Роли</div>
+          <div className="flex-1">
+            <div style={{fontWeight:600,fontSize:"var(--text-base)",color:"var(--color-purple)"}}>Правила Общего фонда</div>
+            <div style={{fontSize:"var(--text-xs)",color:"var(--color-text-muted)",marginTop:1}}>Как работает система · Демередж · Роли</div>
           </div>
-          <div style={{color:"#6366f1",fontSize:14}}>→</div>
+          <div style={{color:"var(--color-accent)",fontSize:"var(--text-base)"}}>→</div>
         </div>
-        {allNews.length===0&&<div style={{textAlign:"center",color:T.text5,padding:"32px 0",fontSize:13}}>Новостей пока нет</div>}
+        {allNews.length===0&&<div className="empty">Новостей пока нет</div>}
+        <div className="stagger">
         {allNews.map(n=>{const author=findM(members,n.author);return (
-          <div key={n.id} style={{background:T.card,border:`1px solid ${n.pinned?"#6366f140":T.border}`,borderRadius:14,padding:"14px 16px",marginBottom:10}}>
-            {n.pinned&&<div style={{fontSize:10,color:"#6366f1",marginBottom:5}}>📌 Закреплено</div>}
-            <div style={{fontWeight:700,fontSize:15,marginBottom:6,color:T.text}}>{n.title}</div>
-            <div style={{fontSize:13,color:T.text2,lineHeight:1.6,marginBottom:10}}>{n.body}</div>
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <div key={n.id} className="card" style={{borderColor:n.pinned?"var(--color-accent-border)":undefined,marginBottom:10}}>
+            {n.pinned&&<div style={{fontSize:"var(--text-2xs)",color:"var(--color-accent)",marginBottom:5}}>📌 Закреплено</div>}
+            <div style={{fontWeight:700,fontSize:"var(--text-lg)",marginBottom:6}}>{n.title}</div>
+            <div style={{fontSize:"var(--text-sm)",color:"var(--color-text-secondary)",lineHeight:1.6,marginBottom:10}}>{n.body}</div>
+            <div className="flex items-center gap-2">
               <Avatar member={author} size={20} />
-              <span style={{fontSize:11,color:T.text4}}>{author.name.split(" ")[0]}</span>
-              <span style={{fontSize:11,color:T.text5,marginLeft:"auto",fontFamily:"monospace"}}>{n.date}</span>
+              <span style={{fontSize:"var(--text-xs)",color:"var(--color-text-muted)"}}>{author.name.split(" ")[0]}</span>
+              <span style={{fontSize:"var(--text-xs)",color:"var(--color-text-faint)",marginLeft:"auto",fontFamily:"var(--font-mono)"}}>{n.date}</span>
             </div>
           </div>
         );})}
+        </div>
       </div>}
 
       {/* OFFERS */}
@@ -900,27 +885,25 @@ export default function App() {
         <button onClick={()=>setAddingOff(true)} className="btn btn-dashed" style={{borderRadius:14,marginBottom:11}}>
           ✦ Опубликовать предложение
         </button>
-        {filtOffers.length===0&&<div style={{textAlign:"center",color:T.text5,padding:"32px 0",fontSize:13}}>{search?"Ничего не найдено":"Нет предложений"}</div>}
-        <div style={{display:"flex",flexDirection:"column",gap:9}}>
+        {filtOffers.length===0&&<div className="empty">{search?"Ничего не найдено":"Нет предложений"}</div>}
+        <div className="flex-col gap-2 stagger">
           {filtOffers.map(offer=>{const owner=findM(members,offer.member);
-            return <div key={offer.id} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:14,padding:"13px 14px",cursor:"pointer",display:"flex",gap:12,overflow:"hidden"}}
-              onClick={()=>{setSelOffer(offer);setBookQty(1);}}
-              onMouseEnter={e=>e.currentTarget.style.background=T.border}
-              onMouseLeave={e=>e.currentTarget.style.background=T.card}>
+            return <div key={offer.id} className="card card-interactive flex gap-3"
+              onClick={()=>{setSelOffer(offer);setBookQty(1);}}>
               {offer.photo
-                ? <div onClick={e=>{e.stopPropagation();setLightbox(offer.photo);}} style={{width:54,height:54,borderRadius:10,overflow:"hidden",flexShrink:0,cursor:"zoom-in"}}><img src={offer.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/></div>
-                : <div style={{width:42,height:42,borderRadius:10,background:T.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{CAT_ICONS[offer.category]}</div>}
-              <div style={{flex:1}}>
-                <div style={{fontWeight:600,fontSize:14,marginBottom:3,color:T.text}}>{offer.title}</div>
-                <div style={{fontSize:12,color:T.text3,lineHeight:1.4}}>{offer.desc}</div>
-                <div style={{marginTop:7,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <div onClick={e=>{e.stopPropagation();setProfileTarget(owner);setView("profile");}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer"}}>
+                ? <div onClick={e=>{e.stopPropagation();setLightbox(offer.photo);}} style={{width:54,height:54,borderRadius:"var(--radius-md)",overflow:"hidden",flexShrink:0,cursor:"zoom-in"}}><img src={offer.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/></div>
+                : <div className="offer-icon">{CAT_ICONS[offer.category]}</div>}
+              <div className="flex-1">
+                <div className="offer-title" style={{marginBottom:3}}>{offer.title}</div>
+                <div className="offer-desc" style={{lineHeight:1.4}}>{offer.desc}</div>
+                <div className="flex justify-between items-center" style={{marginTop:7}}>
+                  <div onClick={e=>{e.stopPropagation();setProfileTarget(owner);setView("profile");}} className="flex items-center gap-1" style={{cursor:"pointer"}}>
                     <Avatar member={owner} size={18} />
-                    <span style={{fontSize:11,color:T.accent}}>{owner.name.split(" ")[0]}</span>
+                    <span style={{fontSize:"var(--text-xs)",color:"var(--color-accent)"}}>{owner.name.split(" ")[0]}</span>
                   </div>
-                  <span style={{fontSize:12,fontWeight:600,color:offer.price===0?"#4ade80":T.text}}>{offer.price===0?"бесплатно":`${cur(offer.price)}/${offer.unit}`}</span>
+                  <span className="offer-price" style={{color:offer.price===0?"var(--color-success)":"var(--color-text-primary)"}}>{offer.price===0?"бесплатно":`${cur(offer.price)}/${offer.unit}`}</span>
                 </div>
-                <QtyBar T={T} qty={offer.qty} reserved={offer.reserved} />
+                <QtyBar qty={offer.qty} reserved={offer.reserved} />
               </div>
             </div>;
           })}
@@ -930,30 +913,30 @@ export default function App() {
       {/* REQUESTS */}
       {tab==="requests"&&<div style={{animation:"fadeUp 0.3s ease"}}>
         <button onClick={()=>setAddingReq(true)} className="btn btn-dashed" style={{borderRadius:14,marginBottom:11}}>🙋 Опубликовать запрос</button>
-        {filtReqs.length===0&&<div style={{textAlign:"center",color:T.text5,padding:"28px 0",fontSize:13}}>{search?"Ничего":"Запросов пока нет"}</div>}
+        {filtReqs.length===0&&<div style={{textAlign:"center",color:"var(--color-text-faint)",padding:"28px 0",fontSize:13}}>{search?"Ничего":"Запросов пока нет"}</div>}
         <div style={{display:"flex",flexDirection:"column",gap:9}}>
           {filtReqs.map(req=>{const author=findM(members,req.member),isMyReq=req.member===meId;
             const pendBids=req.bids.filter(b=>b.status==="pending").length;
             const myBid=req.bids.find(b=>b.from===meId);
             const reqTx=transactions.find(t=>t.reqId===req.id&&(t.status==="active"||t.status==="awaiting_confirm"));
             const canAcceptWork=isMyReq&&reqTx?.status==="awaiting_confirm";
-            return <div key={req.id} style={{background:T.card,border:`1px solid ${canAcceptWork?"#4ade8040":req.status==="closed"?"#4ade8030":isMyReq?"#6366f130":T.border}`,borderRadius:14,padding:"13px 14px",cursor:"pointer"}}
+            return <div key={req.id} style={{background:"var(--color-surface)",border:`1px solid ${canAcceptWork?"#4ade8040":req.status==="closed"?"#4ade8030":isMyReq?"#6366f130":"var(--color-border)"}`,borderRadius:14,padding:"13px 14px",cursor:"pointer"}}
               onClick={()=>setOpenReq(req)}
-              onMouseEnter={e=>e.currentTarget.style.background=T.border}
-              onMouseLeave={e=>e.currentTarget.style.background=T.card}>
+              onMouseEnter={e=>e.currentTarget.style.background="var(--color-border)"}
+              onMouseLeave={e=>e.currentTarget.style.background="var(--color-surface)"}>
               <div style={{display:"flex",gap:11}}>
-                <div style={{width:40,height:40,borderRadius:10,background:T.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>{CAT_ICONS[req.category]||"🙋"}</div>
+                <div style={{width:40,height:40,borderRadius:10,background:"var(--color-border)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>{CAT_ICONS[req.category]||"🙋"}</div>
                 <div style={{flex:1}}>
                   <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
-                    <div style={{fontWeight:600,fontSize:14,color:T.text}}>{req.title}</div>
+                    <div style={{fontWeight:600,fontSize:14,color:"var(--color-text-primary)"}}>{req.title}</div>
                     {req.status==="closed"?<span style={{fontSize:11,color:"#4ade80",marginLeft:8,flexShrink:0}}>✓</span>
                       :isMyReq&&pendBids>0?<span style={{fontSize:11,background:"#f9713015",color:"#f97316",padding:"1px 7px",borderRadius:6,marginLeft:8,flexShrink:0}}>{pendBids} предл.</span>:null}
                   </div>
-                  <div style={{fontSize:12,color:T.text3,lineHeight:1.4}}>{req.desc}</div>
+                  <div style={{fontSize:12,color:"var(--color-text-tertiary)",lineHeight:1.4}}>{req.desc}</div>
                   <div style={{marginTop:7,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                     <div style={{display:"flex",alignItems:"center",gap:5}}>
                       <Avatar member={author} size={16} />
-                      <span style={{fontSize:11,color:T.accent}}>{author.name.split(" ")[0]}</span>
+                      <span style={{fontSize:11,color:"var(--color-accent)"}}>{author.name.split(" ")[0]}</span>
                     </div>
                     {canAcceptWork&&<button onClick={e=>{e.stopPropagation();confirmTx(reqTx.id);}}
                       style={{background:"#052e16",border:"1px solid #166534",color:"#4ade80",padding:"4px 10px",
@@ -962,7 +945,7 @@ export default function App() {
                     </button>}
                     <div style={{display:"flex",gap:8,alignItems:"center"}}>
                       {req.budget&&<span style={{fontSize:11,color:"#fbbf24"}}>до {cur(req.budget)}</span>}
-                      {myBid&&myBid.status==="pending"&&<span style={{fontSize:11,color:T.text2}}>вы: {cur(myBid.price)}</span>}
+                      {myBid&&myBid.status==="pending"&&<span style={{fontSize:11,color:"var(--color-text-secondary)"}}>вы: {cur(myBid.price)}</span>}
                     </div>
                   </div>
                 </div>
@@ -973,66 +956,67 @@ export default function App() {
       </div>}
 
       {/* MEMBERS */}
-      {tab==="members"&&<div style={{display:"flex",flexDirection:"column",gap:9,animation:"fadeUp 0.3s ease"}}>
-        <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:13,padding:"11px 14px",marginBottom:4}}>
-          <div style={{fontSize:11,color:T.text4,marginBottom:4}}>Сумма всех балансов = {cur(Object.values(balances).reduce((a,b)=>a+b,0))}</div>
-          <div style={{height:3,background:T.border,borderRadius:2,overflow:"hidden"}}>
-            <div style={{height:"100%",borderRadius:2,background:"linear-gradient(90deg,#6366f1,#22c55e)",width:"100%"}} /></div>
-          <div style={{fontSize:11,color:T.text5,marginTop:4}}>Взаимный кредит · {CUR.plural} созданы из доверия</div>
+      {tab==="members"&&<div className="flex-col gap-2 anim-fade-up">
+        <div className="card" style={{marginBottom:4}}>
+          <div style={{fontSize:"var(--text-xs)",color:"var(--color-text-muted)",marginBottom:4}}>Сумма всех балансов = {cur(Object.values(balances).reduce((a,b)=>a+b,0))}</div>
+          <div className="qty-bar-track">
+            <div className="qty-bar-fill" style={{background:"linear-gradient(90deg,var(--color-accent),var(--color-success))",width:"100%"}} /></div>
+          <div style={{fontSize:"var(--text-xs)",color:"var(--color-text-faint)",marginTop:4}}>Взаимный кредит · {CUR.plural} созданы из доверия</div>
         </div>
+        <div className="stagger">
         {members.map(m=>{
           const bal=balances[m.id]??m.balance;
           const pot=payPotential(m.id,offers,bal);
           return <div key={m.id} onClick={()=>{setProfileTarget(m);setView("profile");}}
-            style={{background:T.card,border:`1px solid ${m.id===meId?"#6366f130":m.frozen?"#33455360":T.border}`,
-              borderRadius:13,padding:"11px 14px",display:"flex",alignItems:"center",gap:13,cursor:"pointer",opacity:m.frozen?0.6:1}}
-            onMouseEnter={e=>e.currentTarget.style.background=T.border}
-            onMouseLeave={e=>e.currentTarget.style.background=T.card}>
+            className="card card-interactive flex items-center gap-3"
+            style={{borderColor:m.id===meId?"var(--color-accent-border)":m.frozen?"var(--color-border-strong)":undefined,
+              opacity:m.frozen?0.6:1}}>
             <Avatar member={m} size={42} />
-            <div style={{flex:1}}>
-              <div style={{display:"flex",alignItems:"center",gap:7,flexWrap:"wrap"}}>
-                <span style={{fontWeight:600,fontSize:14,color:T.text}}>{m.name}</span>
-                {m.id===meId&&<span style={{fontSize:11,background:"#6366f120",color:"#818cf8",padding:"2px 7px",borderRadius:10}}>вы</span>}
+            <div className="flex-1">
+              <div className="flex items-center gap-2 wrap">
+                <span style={{fontWeight:600,fontSize:"var(--text-base)"}}>{m.name}</span>
+                {m.id===meId&&<span className="profile-me-badge">вы</span>}
                 <RoleBadge role={m.systemRole} />
-                {m.frozen&&<span style={{fontSize:10,color:T.text3}}>❄</span>}
+                {m.frozen&&<span style={{fontSize:"var(--text-2xs)",color:"var(--color-text-tertiary)"}}>❄</span>}
               </div>
-              <div style={{fontSize:11,color:T.text4,marginTop:2}}>{m.profession||(m.skills||[]).join(" · ")}</div>
-              {pot!==bal&&<div style={{fontSize:10,color:T.text5,marginTop:1}}>потенциал: {cur(pot)}</div>}
+              <div style={{fontSize:"var(--text-xs)",color:"var(--color-text-muted)",marginTop:2}}>{m.profession||(m.skills||[]).join(" · ")}</div>
+              {pot!==bal&&<div style={{fontSize:"var(--text-2xs)",color:"var(--color-text-faint)",marginTop:1}}>потенциал: {cur(pot)}</div>}
             </div>
-            <div style={{display:"flex",alignItems:"center",gap:7}}>
-              <Pill T={T} balance={bal} />
-              <span style={{color:T.text5}}>›</span>
+            <div className="flex items-center gap-2">
+              <Pill balance={bal} />
+              <span style={{color:"var(--color-text-faint)"}}>›</span>
             </div>
           </div>;})}
+        </div>
       </div>}
 
       {/* GRAPH */}
       {tab==="graph"&&<div style={{animation:"fadeUp 0.3s ease"}}>
-        <div style={{fontSize:13,color:T.text4,marginBottom:10}}>Нажми на участника → открыть профиль</div>
+        <div style={{fontSize:13,color:"var(--color-text-muted)",marginBottom:10}}>Нажми на участника → открыть профиль</div>
         <NetworkGraph members={members} transactions={transactions} invites={invites} onSelectMember={goToMember} />
       </div>}
 
       {/* LEDGER */}
-      {tab==="ledger"&&<div style={{animation:"fadeUp 0.3s ease"}}>
-        <div style={{fontSize:11,color:T.text4,marginBottom:10}}>Все транзакции публичны · {transactions.length} записей</div>
-        {transactions.length===0&&<div style={{textAlign:"center",color:T.text5,padding:"32px 0",fontSize:13}}>Транзакций пока нет</div>}
-        <div style={{display:"flex",flexDirection:"column",gap:7}}>
+      {tab==="ledger"&&<div className="anim-fade-up">
+        <div className="section-label-sm" style={{marginBottom:10}}>Все транзакции публичны · {transactions.length} записей</div>
+        {transactions.length===0&&<div className="empty">Транзакций пока нет</div>}
+        <div className="flex-col gap-2 stagger">
           {[...transactions].sort((a,b)=>b.id-a.id).map(tx=>{const from=findM(members,tx.from),to=findM(members,tx.to);
             const isGift=tx.type==="gift",sc=S_COLOR[tx.status]||"#475569";
-            return <div key={tx.id} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:10,padding:"10px 12px",opacity:tx.status==="cancelled"?0.35:1}}>
-              <div style={{display:"flex",justifyContent:"space-between"}}>
-                <div style={{flex:1}}>
-                  <div style={{display:"flex",gap:7,alignItems:"center",marginBottom:4}}><span>{isGift?"💛":"⇄"}</span><span style={{fontSize:13,fontWeight:500,color:T.text}}>{tx.what}</span></div>
-                  <div style={{fontSize:11,color:T.text4,display:"flex",gap:5,alignItems:"center"}}>
-                    <span onClick={()=>from.id&&goToMember(from.id)} style={{cursor:from.id?"pointer":"default",color:from.id?T.accent:T.text4}}>{from.name.split(" ")[0]}</span>
+            return <div key={tx.id} className={`card card-compact${tx.status==="cancelled"?" tx-card-cancelled":""}`}>
+              <div className="flex justify-between">
+                <div className="flex-1">
+                  <div className="flex gap-2 items-center" style={{marginBottom:4}}><span>{isGift?"💛":"⇄"}</span><span style={{fontSize:"var(--text-sm)",fontWeight:500}}>{tx.what}</span></div>
+                  <div className="flex gap-1 items-center" style={{fontSize:"var(--text-xs)",color:"var(--color-text-muted)"}}>
+                    <span onClick={()=>from.id&&goToMember(from.id)} style={{cursor:from.id?"pointer":"default",color:from.id?"var(--color-accent)":undefined}}>{from.name.split(" ")[0]}</span>
                     <span>→</span>
-                    <span onClick={()=>to.id&&goToMember(to.id)} style={{cursor:to.id?"pointer":"default",color:to.id?T.accent:T.text4}}>{to.name.split(" ")[0]}</span>
-                    <span style={{background:`${sc}18`,color:sc,padding:"1px 5px",borderRadius:5,fontSize:10}}>{S_LABEL[tx.status]||tx.status}</span>
+                    <span onClick={()=>to.id&&goToMember(to.id)} style={{cursor:to.id?"pointer":"default",color:to.id?"var(--color-accent)":undefined}}>{to.name.split(" ")[0]}</span>
+                    <span className="badge" style={{background:`${sc}18`,color:sc}}>{S_LABEL[tx.status]||tx.status}</span>
                   </div>
                 </div>
                 <div style={{textAlign:"right",marginLeft:10}}>
-                  <div style={{fontSize:13,fontWeight:700,color:isGift?"#fbbf24":T.text}}>{cur(tx.amount)}</div>
-                  <div style={{fontSize:10,color:T.text5,fontFamily:"monospace"}}>{tx.date}</div>
+                  <div style={{fontSize:"var(--text-sm)",fontWeight:700,color:isGift?"var(--color-gold)":undefined}}>{cur(tx.amount)}</div>
+                  <div style={{fontSize:"var(--text-2xs)",color:"var(--color-text-faint)",fontFamily:"var(--font-mono)"}}>{tx.date}</div>
                 </div>
               </div>
             </div>;
@@ -1042,19 +1026,19 @@ export default function App() {
     </div>
 
     {/* FOOTER — compact with bottom tab bar */}
-    <div style={{margin:"24px 20px 0",padding:"16px 20px",background:T.card,border:`1px solid ${T.border}`,
+    <div style={{margin:"24px 20px 0",padding:"16px 20px",background:"var(--color-surface)",border:`1px solid ${"var(--color-border)"}`,
       borderRadius:16,textAlign:"center"}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:8}}>
         <span style={{fontSize:18}}>🌾</span>
-        <span style={{fontWeight:700,fontSize:14,color:T.text}}>Общий фонд</span>
+        <span style={{fontWeight:700,fontSize:14,color:"var(--color-text-primary)"}}>Общий фонд</span>
       </div>
-      <div style={{fontSize:12,color:T.text4,lineHeight:1.5,marginBottom:12}}>
+      <div style={{fontSize:12,color:"var(--color-text-muted)",lineHeight:1.5,marginBottom:12}}>
         Сообщество взаимопомощи на основе доверия
       </div>
       <div style={{display:"flex",justifyContent:"center",gap:8}}>
         <button onClick={()=>setShowConstitution(true)}
-          style={{display:"inline-flex",alignItems:"center",gap:6,background:T.accent+"12",
-            border:`1px solid ${T.accent}25`,borderRadius:10,padding:"8px 14px",
+          style={{display:"inline-flex",alignItems:"center",gap:6,background:"var(--color-accent)"+"12",
+            border:`1px solid ${"var(--color-accent)"}25`,borderRadius:10,padding:"8px 14px",
             color:"#818cf8",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
           📜 Правила
         </button>
@@ -1065,39 +1049,39 @@ export default function App() {
           💛 Подарить
         </button>
       </div>
-      <div style={{marginTop:10,fontSize:10,color:T.text5,fontFamily:"monospace"}}>
+      <div style={{marginTop:10,fontSize:10,color:"var(--color-text-faint)",fontFamily:"monospace"}}>
         v{APP_VERSION}
       </div>
     </div>{/* end tab animation wrapper */}
     </div>{/* end scroll container */}
 
     {/* BOOK SHEET */}
-    {selOffer&&<Sheet T={T} onClose={()=>{setSelOffer(null);setTxNote("");setBookQty(1);}}>
+    {selOffer&&<Sheet onClose={()=>{setSelOffer(null);setTxNote("");setBookQty(1);}}>
       <div style={{display:"flex",gap:12,marginBottom:14}}>
         {selOffer.photo
           ? <div style={{width:54,height:54,borderRadius:12,overflow:"hidden",flexShrink:0}}><img src={selOffer.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/></div>
-          : <div style={{width:48,height:48,borderRadius:12,background:T.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{CAT_ICONS[selOffer.category]}</div>}
-        <div><div style={{fontWeight:700,fontSize:16,color:T.text}}>{selOffer.title}</div><div style={{fontSize:13,color:T.text3,marginTop:3}}>{selOffer.desc}</div></div>
+          : <div style={{width:48,height:48,borderRadius:12,background:"var(--color-border)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{CAT_ICONS[selOffer.category]}</div>}
+        <div><div style={{fontWeight:700,fontSize:16,color:"var(--color-text-primary)"}}>{selOffer.title}</div><div style={{fontSize:13,color:"var(--color-text-tertiary)",marginTop:3}}>{selOffer.desc}</div></div>
       </div>
-      <QtyBar T={T} qty={selOffer.qty} reserved={selOffer.reserved} />
+      <QtyBar qty={selOffer.qty} reserved={selOffer.reserved} />
       <div style={{marginTop:13}}>
-        <SL T={T}>Количество</SL>
+        <SL>Количество</SL>
         <div style={{display:"flex",alignItems:"center",gap:11,marginBottom:12}}>
-          <button onClick={()=>setBookQty(q=>Math.max(1,q-1))} style={{width:36,height:36,borderRadius:8,background:T.border,border:"none",color:T.text,fontSize:20,cursor:"pointer"}}>−</button>
-          <span style={{fontSize:20,fontWeight:700,minWidth:26,textAlign:"center",color:T.text}}>{bookQty}</span>
-          <button onClick={()=>setBookQty(q=>Math.min(selOffer.qty-selOffer.reserved,q+1))} style={{width:36,height:36,borderRadius:8,background:T.border,border:"none",color:T.text,fontSize:20,cursor:"pointer"}}>+</button>
-          <span style={{fontSize:12,color:T.text3}}>доступно: {selOffer.qty-selOffer.reserved}</span>
+          <button onClick={()=>setBookQty(q=>Math.max(1,q-1))} style={{width:36,height:36,borderRadius:8,background:"var(--color-border)",border:"none",color:"var(--color-text-primary)",fontSize:20,cursor:"pointer"}}>−</button>
+          <span style={{fontSize:20,fontWeight:700,minWidth:26,textAlign:"center",color:"var(--color-text-primary)"}}>{bookQty}</span>
+          <button onClick={()=>setBookQty(q=>Math.min(selOffer.qty-selOffer.reserved,q+1))} style={{width:36,height:36,borderRadius:8,background:"var(--color-border)",border:"none",color:"var(--color-text-primary)",fontSize:20,cursor:"pointer"}}>+</button>
+          <span style={{fontSize:12,color:"var(--color-text-tertiary)"}}>доступно: {selOffer.qty-selOffer.reserved}</span>
         </div>
       </div>
       {selOffer.price>0?<>
-        <IRow T={T} label={`Итого ×${bookQty}`}><span style={{fontWeight:700,fontSize:17,color:T.text}}>{cur(selOffer.price*bookQty)}</span></IRow>
-        <IRow T={T} label="Баланс после"><Pill T={T} balance={myBalance-selOffer.price*bookQty} /></IRow>
-      </>:<IRow T={T} label="Стоимость"><span style={{color:"#4ade80",fontWeight:600}}>бесплатно</span></IRow>}
-      <FI T={T} value={txNote} onChange={setTxNote} placeholder="Сообщение…" multi />
-      <PB T={T} onClick={doBook} disabled={(selOffer.qty-selOffer.reserved)<bookQty||selOffer.member===meId}>
+        <IRow label={`Итого ×${bookQty}`}><span style={{fontWeight:700,fontSize:17,color:"var(--color-text-primary)"}}>{cur(selOffer.price*bookQty)}</span></IRow>
+        <IRow label="Баланс после"><Pill balance={myBalance-selOffer.price*bookQty} /></IRow>
+      </>:<IRow label="Стоимость"><span style={{color:"#4ade80",fontWeight:600}}>бесплатно</span></IRow>}
+      <FI value={txNote} onChange={setTxNote} placeholder="Сообщение…" multi />
+      <PB onClick={doBook} disabled={(selOffer.qty-selOffer.reserved)<bookQty||selOffer.member===meId}>
           {selOffer.member===meId?"Это ваше предложение":`Забронировать${bookQty>1?` ×${bookQty}`:""}`}
         </PB>
-      {selOffer.member!==meId&&<PB T={T} v="ghost" s={{marginTop:8}} onClick={()=>{
+      {selOffer.member!==meId&&<PB v="ghost" s={{marginTop:8}} onClick={()=>{
         const seller=members.find(m=>m.id===selOffer.member);
         const msg=`💬 По предложению «${selOffer.title}»`;
         setSelOffer(null); setTxNote(""); setBookQty(1);
@@ -1106,25 +1090,25 @@ export default function App() {
     </Sheet>}
 
     {/* GIFT SHEET */}
-    {showGift&&<Sheet T={T} onClose={()=>{setShowGift(false);setGiftCustom("");}}>
-      <div style={{fontSize:18,fontWeight:700,marginBottom:4,color:T.text}}>💛 Передать дар</div>
-      <div style={{fontSize:13,color:T.text4,marginBottom:14}}>Дар не создаёт обязательств</div>
-      <SL T={T}>Кому</SL>
+    {showGift&&<Sheet onClose={()=>{setShowGift(false);setGiftCustom("");}}>
+      <div style={{fontSize:18,fontWeight:700,marginBottom:4,color:"var(--color-text-primary)"}}>💛 Передать дар</div>
+      <div style={{fontSize:13,color:"var(--color-text-muted)",marginBottom:14}}>Дар не создаёт обязательств</div>
+      <SL>Кому</SL>
       <GiftMemberPicker members={members} meId={meId} giftTo={giftTo} setGiftTo={setGiftTo} balances={balances} T={T} />
-      <SL T={T}>Размер</SL>
+      <SL>Размер</SL>
       <div style={{display:"flex",gap:7,marginBottom:9}}>
         {[5,10,20,50].map(n=><button key={n} onClick={()=>{setGiftAmt(n);setGiftCustom("");}} style={{flex:1,
-          background:giftAmt===n&&!giftCustom?T.accent:T.input,
-          border:`1px solid ${giftAmt===n&&!giftCustom?T.accent:T.border}`,
-          color:giftAmt===n&&!giftCustom?"#fff":T.text2,
+          background:giftAmt===n&&!giftCustom?"var(--color-accent)":"var(--color-input)",
+          border:`1px solid ${giftAmt===n&&!giftCustom?"var(--color-accent)":"var(--color-border)"}`,
+          color:giftAmt===n&&!giftCustom?"#fff":"var(--color-text-secondary)",
           padding:"7px",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{n}</button>)}
       </div>
       <input type="number" min="1" value={giftCustom} onChange={e=>{setGiftCustom(e.target.value);setGiftAmt(0);}}
         placeholder="Или введи свою сумму…"
-        style={{width:"100%",background:T.input,border:`1px solid ${giftCustom?T.accent:T.border}`,borderRadius:10,
-          color:T.text,padding:"10px 14px",fontSize:14,fontFamily:"inherit",outline:"none",marginBottom:11}} />
-      <FI T={T} value={giftMsg} onChange={setGiftMsg} placeholder="Слово дара…" multi s={{height:60}} />
-      <PB T={T} v="gold" onClick={doGift} disabled={!giftTo}>Передать {cur(giftCustom?Number(giftCustom):giftAmt)} · без условий</PB>
+        style={{width:"100%",background:"var(--color-input)",border:`1px solid ${giftCustom?"var(--color-accent)":"var(--color-border)"}`,borderRadius:10,
+          color:"var(--color-text-primary)",padding:"10px 14px",fontSize:14,fontFamily:"inherit",outline:"none",marginBottom:11}} />
+      <FI value={giftMsg} onChange={setGiftMsg} placeholder="Слово дара…" multi s={{height:60}} />
+      <PB v="gold" onClick={doGift} disabled={!giftTo}>Передать {cur(giftCustom?Number(giftCustom):giftAmt)} · без условий</PB>
     </Sheet>}
 
     {addingReq&&<RequestForm T={T} categories={categories} onClose={()=>setAddingReq(false)} onSave={d=>{addRequest(d);setAddingReq(false);}} />}
