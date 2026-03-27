@@ -159,14 +159,14 @@ const AV_COLORS = ["#7c6ff7","#f97316","#22c55e","#ec4899","#06b6d4","#eab308"];
 // ─── THEME ────────────────────────────────────────────────────────────────────
 const THEMES = {
   dark: {
-    bg:"#0d0f14", card:"#131720", border:"#1e2330", border2:"#2d3548",
-    text:"#e2e8f0", text2:"#94a3b8", text3:"#64748b", text4:"#475569", text5:"#334155",
+    bg:"#0a0c10", card:"#12151c", border:"#1e2330", border2:"#2d3548",
+    text:"#e8ecf4", text2:"#94a3b8", text3:"#64748b", text4:"#475569", text5:"#334155",
     input:"#0d0f14", accent:"#6366f1",
   },
   light: {
-    bg:"#f1f5f9", card:"#ffffff", border:"#e2e8f0", border2:"#cbd5e1",
+    bg:"#f4f6fa", card:"#ffffff", border:"#e2e8f0", border2:"#cbd5e1",
     text:"#0f172a", text2:"#334155", text3:"#475569", text4:"#64748b", text5:"#94a3b8",
-    input:"#f8fafc", accent:"#6366f1",
+    input:"#f8fafc", accent:"#5b5ef0",
   }
 };
 
@@ -319,22 +319,21 @@ function Sheet({ onClose, children, T }) {
 
   const progress = Math.min(dragY / 120, 1);
   const sheetStyle = {
-    background: bg, borderRadius: "20px 20px 0 0", padding: "24px 20px 36px",
-    width: "100%", border: `1px solid ${br}`,
-    animation: closing ? "slideOut 0.26s ease forwards" : "slideIn 0.25s ease",
-    maxHeight: "90vh", overflowY: "auto", color: T?.text||"#e2e8f0",
+    background: bg, borderRadius: "20px 20px 0 0", padding: "24px 20px calc(36px + env(safe-area-inset-bottom, 0px))",
+    width: "100%", border: `1px solid ${br}`, borderBottom: "none",
+    animation: closing ? "slideOut 0.26s ease forwards" : "slideInSpring 0.3s ease",
+    maxHeight: "90vh", overflowY: "auto", color: T?.text||"var(--color-text-primary)",
     transform: `translateY(${dragY}px)`,
     transition: dragY === 0 ? "transform 0.2s ease" : "none",
   };
 
-  return <div style={{position:"fixed",inset:0,
+  return <div className="sheet-backdrop" style={{
     background:`rgba(0,0,0,${0.75 - progress * 0.5})`,
-    display:"flex",alignItems:"flex-end",zIndex:200,backdropFilter:`blur(${4 - progress*4}px)`,
+    backdropFilter:`blur(${4 - progress*4}px)`,WebkitBackdropFilter:`blur(${4 - progress*4}px)`,
     transition: dragY===0 ? "background 0.2s" : "none"}}
     onClick={e=>e.target===e.currentTarget&&doClose()}>
     <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} style={sheetStyle}>
-      <div style={{width:36,height:4,background:br,borderRadius:2,margin:"0 auto 20px",
-        opacity: 1 - progress * 0.5}} />
+      <div className="sheet-handle" style={{opacity: 1 - progress * 0.5}} />
       {children}
     </div>
   </div>;
@@ -350,31 +349,29 @@ function IRow({ label, children, T }) {
     <span style={{fontSize:13,color:T?.text3||"#64748b"}}>{label}</span>{children}</div>;
 }
 function FI({ value, onChange, placeholder, multi, type="text", s={}, T }) {
-  const base={width:"100%",background:T?.input||"#0d0f14",border:`1px solid ${T?.border||"#1e2330"}`,borderRadius:10,
-    color:T?.text||"#e2e8f0",padding:"11px 14px",fontSize:14,fontFamily:"inherit",outline:"none",marginBottom:11,...s};
+  const base={width:"100%",background:T?.input||"var(--color-input)",border:`1px solid ${T?.border||"var(--color-border)"}`,borderRadius:10,
+    color:T?.text||"var(--color-text-primary)",padding:"11px 14px",fontSize:14,fontFamily:"inherit",outline:"none",marginBottom:11,
+    transition:"border-color 150ms ease, box-shadow 150ms ease",...s};
   return multi
-    ? <textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={{...base,resize:"none",height:68}} />
-    : <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={base} />;
+    ? <textarea className="input" value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={{...base,resize:"none",height:68}} />
+    : <input className="input" type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={base} />;
 }
 function PB({ onClick, children, v="primary", s={}, disabled=false, T }) {
-  const acc = T?.accent||"#4f46e5";
+  const acc = T?.accent||"var(--color-accent)";
   const vs={
     primary:{background:acc,color:"#fff",border:"none"},
-    gold:   {background:"#78350f",color:"#fbbf24",border:"1px solid #92400e"},
-    ghost:  {background:T?.card||"#1e2330",color:T?.text2||"#94a3b8",border:`1px solid ${T?.border||"#2d3548"}`},
-    danger: {background:"#1a0d0d",color:"#f87171",border:"1px solid #7f1d1d"},
-    green:  {background:"#052e16",color:"#4ade80",border:"1px solid #166534"},
-    orange: {background:"#431407",color:"#f97316",border:"1px solid #7c2d12"},
+    gold:   {background:"var(--color-gold-surface)",color:"var(--color-gold)",border:"1px solid var(--color-gold-border)"},
+    ghost:  {background:T?.card||"var(--color-surface)",color:T?.text2||"var(--color-text-secondary)",border:`1px solid ${T?.border||"var(--color-border-strong)"}`},
+    danger: {background:"var(--color-danger-dark)",color:"var(--color-danger)",border:"1px solid var(--color-danger-border)"},
+    green:  {background:"var(--color-success-dark)",color:"var(--color-success)",border:"1px solid var(--color-success-border)"},
+    orange: {background:"var(--color-orange-surface)",color:"var(--color-orange)",border:"1px solid var(--color-orange-border)"},
   };
-  return <button onClick={onClick} disabled={disabled} style={{width:"100%",padding:"12px",borderRadius:12,
-    fontSize:14,fontWeight:600,cursor:disabled?"not-allowed":"pointer",fontFamily:"inherit",
-    opacity:disabled?0.4:1,...vs[v],...s}}>{children}</button>;
+  const variantClass = {primary:"btn-primary",gold:"btn-gold",ghost:"btn-ghost",danger:"btn-danger",green:"btn-success",orange:"btn-orange"}[v]||"";
+  return <button className={`btn btn-full ${variantClass}`} onClick={onClick} disabled={disabled} style={{padding:"12px",borderRadius:12,
+    fontSize:14,...vs[v],...s}}>{children}</button>;
 }
 function Notif({ msg }) {
-  return <div style={{position:"fixed",top:20,left:"50%",transform:"translateX(-50%)",
-    background:"#1e2330",border:"1px solid #2d3548",padding:"10px 20px",borderRadius:12,
-    zIndex:1000,fontSize:14,fontWeight:500,color:"#e2e8f0",animation:"notif 2.8s ease forwards",
-    whiteSpace:"nowrap",boxShadow:"0 8px 32px rgba(0,0,0,0.4)"}}>{msg}</div>;
+  return <div className="toast">{msg}</div>;
 }
 
 // ─── COPY BUTTON ──────────────────────────────────────────────────────────────
@@ -1537,13 +1534,12 @@ function Lightbox({ src, onClose }) {
     const h=(e)=>{if(e.key==="Escape")onClose();};
     window.addEventListener("keydown",h);return()=>window.removeEventListener("keydown",h);
   },[onClose]);
-  return <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",zIndex:2000,
-    display:"flex",alignItems:"center",justifyContent:"center",cursor:"zoom-out",padding:16}}>
+  return <div className="lightbox" onClick={onClose} style={{padding:16}}>
     <img src={src} alt="" onClick={e=>e.stopPropagation()}
-      style={{maxWidth:"100%",maxHeight:"90vh",borderRadius:14,boxShadow:"0 24px 80px rgba(0,0,0,0.8)",objectFit:"contain"}} />
+      style={{borderRadius:14}} />
     <button onClick={onClose} style={{position:"fixed",top:16,right:16,width:36,height:36,borderRadius:"50%",
       background:"rgba(255,255,255,0.15)",border:"none",color:"#fff",fontSize:18,cursor:"pointer",
-      display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+      display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(8px)"}}>✕</button>
   </div>;
 }
 
@@ -1960,16 +1956,6 @@ function GiftMemberPicker({ members, meId, giftTo, setGiftTo, balances, T }) {
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 const GCSS=`
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-  *{box-sizing:border-box;margin:0;padding:0;}::-webkit-scrollbar{display:none;}input,textarea{outline:none;}
-  html,body{background:#0d0f14;}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes slideIn{from{opacity:0;transform:translateY(30px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-  @keyframes slideOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(100%)}}
-  @keyframes slideLeft{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
-  @keyframes slideRight{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:translateX(0)}}
-  @keyframes notif{0%{opacity:0;transform:translateX(-50%) translateY(-8px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-8px)}}
-  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
   .tab-enter-left{animation:slideLeft 0.22s cubic-bezier(0.25,0.46,0.45,0.94)}
   .tab-enter-right{animation:slideRight 0.22s cubic-bezier(0.25,0.46,0.45,0.94)}
 `;
@@ -1983,6 +1969,7 @@ export default function App() {
   const T = THEMES[themeKey] || THEMES.dark;
   useEffect(()=>{
     try { localStorage.setItem("of_theme", themeKey); } catch(e){}
+    document.documentElement.setAttribute("data-theme", themeKey);
     document.body.style.background = (THEMES[themeKey]||THEMES.dark).bg;
   },[themeKey]);
   const [loading,      setLoading]      = useState(true);
@@ -2558,27 +2545,60 @@ export default function App() {
   const pinnedNews=news.filter(n=>n.pinned);
   const allNews=[...news].sort((a,b)=>b.pinned-a.pinned);
 
-  const WRAP={minHeight:"100vh",background:T.bg,color:T.text,fontFamily:"'DM Sans','Segoe UI',sans-serif"};
+  const WRAP={minHeight:"100dvh",background:T.bg,color:T.text,fontFamily:"var(--font-sans)"};
   const INNER={maxWidth:520,margin:"0 auto",position:"relative"};
+
+  // ─── BOTTOM TAB BAR ──
+  const TAB_BAR_ITEMS = [
+    {key:"main", icon:"🏠", iconActive:"🏠", label:"Главная"},
+    {key:"chat", icon:"💬", iconActive:"💬", label:"Чат"},
+    {key:"tasks", icon:"📋", iconActive:"📋", label:"Задачи"},
+    {key:"profile", icon:"👤", iconActive:"👤", label:"Профиль"},
+  ];
+  const BottomTabBar = () => (
+    <nav className="tab-bar">
+      {TAB_BAR_ITEMS.map(item=>{
+        const isActive = item.key==="main" ? view==="main" : view===item.key;
+        const unread = item.key==="chat" ? messages.filter(m=>m.to===meId&&!m.read).length
+          : item.key==="tasks" ? transactions.filter(t=>(t.from===meId||t.to===meId)&&t.status==="active").length
+          : 0;
+        return <button key={item.key} className={`tab-item ${isActive?"tab-item-active":""}`}
+          onClick={()=>{
+            if(item.key==="main"){setView_("main");setViewStack([]);}
+            else if(item.key==="profile"){setProfileTarget(me);setView("profile");}
+            else setView(item.key);
+          }}>
+          <span className="tab-item-icon">{isActive?item.iconActive:item.icon}</span>
+          <span>{item.label}</span>
+          {unread>0&&<span className="tab-item-dot" />}
+        </button>;
+      })}
+      {canModerate(myRole)&&<button className={`tab-item ${view==="admin"?"tab-item-active":""}`}
+        onClick={()=>setView("admin")}>
+        <span className="tab-item-icon">⚙️</span>
+        <span>Админ</span>
+      </button>}
+    </nav>
+  );
 
   if(showConstitution) return <div style={WRAP}><style>{GCSS}</style>
     <div style={INNER}><ConstitutionScreen T={T} onBack={()=>setShowConstitution(false)}/></div></div>;
 
   if(view==="chat") return <div style={WRAP}><style>{GCSS}</style>{notif&&<Notif msg={notif}/>}
-    <div style={INNER}><ChatScreen meId={meId} members={members} messages={messages}
+    <div style={{...INNER,paddingBottom:"calc(var(--nav-height) + var(--safe-area-bottom) + 8px)"}}><ChatScreen meId={meId} members={members} messages={messages}
       onSend={sendMessage} onBack={()=>{setChatInitPeer(null);setChatInitMsg("");goBack();}} groupMessages={groupMessages} T={T} onSelectMember={goToMember}
       initialPeerId={chatInitPeer} initialMsg={chatInitMsg}/>
-    <VersionFooter T={T}/></div></div>;
+    <VersionFooter T={T}/></div><BottomTabBar /></div>;
 
   if(view==="tasks") return <div style={WRAP}><style>{GCSS}</style>{notif&&<Notif msg={notif}/>}
-    <div style={INNER}><MyTasksScreen meId={meId} members={members} transactions={transactions}
+    <div style={{...INNER,paddingBottom:"calc(var(--nav-height) + var(--safe-area-bottom) + 8px)"}}><MyTasksScreen meId={meId} members={members} transactions={transactions}
       requests={requests} T={T} onBack={goBack}
       onConfirmTx={confirmTx} onCancelTx={cancelTx} onMarkDone={markDone} onCancelRequest={cancelRequest} onCancelBid={cancelBid} onSelectMember={goToMember} onOpenReq={(r)=>{setOpenReq(r);setView("main");}} reviews={reviews} onReview={setShowReviewFor}/>
-    <VersionFooter T={T}/></div></div>;
+    <VersionFooter T={T}/></div><BottomTabBar /></div>;
 
   if(view==="admin") return <div style={WRAP}><style>{GCSS}</style>
     {notif&&<Notif msg={notif} />}
-    <div style={INNER}><AdminPanel members={members} offers={offers} transactions={transactions}
+    <div style={{...INNER,paddingBottom:"calc(var(--nav-height) + var(--safe-area-bottom) + 8px)"}}><AdminPanel members={members} offers={offers} transactions={transactions}
       invites={invites} balances={balances} news={news} meId={meId} T={T}
       onCreateInvite={createInvite} onBack={goBack}
       onSelectMember={goToMember} onFreezeToggle={freezeToggle}
@@ -2588,11 +2608,11 @@ export default function App() {
               setNegLimit(v);
             }}
       categories={categories} onAddCategory={addCategory} onDeleteCategory={deleteCategory} onMoveCategory={moveCategory} onEditCategoryIcon={editCategoryIcon} />
-    <VersionFooter T={T}/></div></div>;
+    <VersionFooter T={T}/></div><BottomTabBar /></div>;
 
   if(view==="profile") return <div style={WRAP}><style>{GCSS}</style>
     {notif&&<Notif msg={notif} />}
-    <div style={INNER}><ProfileScreen member={profileTarget} members={members} offers={offers}
+    <div style={{...INNER,paddingBottom:"calc(var(--nav-height) + var(--safe-area-bottom) + 8px)"}}><ProfileScreen member={profileTarget} members={members} offers={offers}
       transactions={transactions} balances={balances} invites={invites} meId={meId} T={T}
       categories={categories}
       onBack={goBack} onAddOffer={addOffer} onEditOffer={editOffer}
@@ -2600,66 +2620,44 @@ export default function App() {
       onUpdateProfile={updateProfile} onCreateInvite={createInvite}
       onCancelTx={cancelTx} onConfirmTx={confirmTx} onMarkDone={markDone} onSelectMember={goToMember}
       reviews={reviews} onReview={setShowReviewFor} />
-    <VersionFooter T={T}/></div></div>;
+    <VersionFooter T={T}/></div><BottomTabBar /></div>;
 
   return <div style={WRAP}><style>{GCSS}</style>
     {notif&&<Notif msg={notif} />}
-    <div style={INNER}>
-    {/* HEADER */}
-    <div style={{padding:"16px 20px 12px",borderBottom:`1px solid ${T.border}`,position:"sticky",top:0,background:T.bg,zIndex:50}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <div>
-          <div style={{fontSize:11,color:T.text4,letterSpacing:2,textTransform:"uppercase",marginBottom:2}}>🌾 Общий фонд</div>
-          <div style={{fontSize:19,fontWeight:700,letterSpacing:"-0.5px",color:T.text}}>{members.length} участников</div>
-        </div>
-        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:5}}>
+    <div style={{...INNER,paddingBottom:"calc(var(--nav-height) + var(--safe-area-bottom) + 8px)"}}>
+    {/* HEADER — modernized */}
+    <div className="header" style={{padding:"14px 20px 10px",borderBottom:`1px solid ${T.border}`,flexDirection:"column",gap:0}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",width:"100%"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{fontSize:28,lineHeight:1}}>🌾</div>
           <div>
-            <Pill T={T} balance={myBalance} />
-            {myBalance>DEMURRAGE_THRESHOLD&&<div style={{fontSize:10,color:"#fb923c",textAlign:"center",marginTop:1}}>
-              -{cur(calcDemurrage(myBalance,1))}/мес
-            </div>}
+            <div style={{fontSize:18,fontWeight:700,letterSpacing:"-0.5px",color:T.text,lineHeight:1.2}}>Общий фонд</div>
+            <div style={{fontSize:11,color:T.text4,marginTop:1}}>{members.length} участников</div>
           </div>
-          <div style={{display:"flex",gap:5,alignItems:"center"}}>
-            {/* единый стиль для всех кнопок шапки */}
-            {[
-              { icon: themeKey==="dark"?"☀️":"🌙", onClick:()=>setThemeKey(k=>k==="dark"?"light":"dark"), badge:0 },
-              { icon:"💬", onClick:()=>setView("chat"), badge: messages.filter(m=>m.to===meId&&!m.read).length },
-              { icon:"✓", onClick:()=>setView("tasks"), badge: transactions.filter(t=>(t.from===meId||t.to===meId)&&t.status==="active").length, iconStyle:{fontWeight:700,fontSize:15} },
-              { icon:"🔔", onClick:()=>setShowNotifs(!showNotifs), badge: myNotifs.length },
-            ].map((b,i)=>(
-              <button key={i} onClick={b.onClick} style={{
-                position:"relative",width:32,height:32,borderRadius:8,
-                background:T.card,border:`1px solid ${T.border}`,
-                color:T.text2,fontSize:16,cursor:"pointer",
-                display:"flex",alignItems:"center",justifyContent:"center",
-                flexShrink:0,...(b.iconStyle||{})
-              }}>
-                {b.icon}
-                {b.badge>0&&<span style={{position:"absolute",top:-4,right:-4,minWidth:15,height:15,borderRadius:8,background:"#f97316",color:"#fff",fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 2px"}}>{b.badge}</span>}
-              </button>
-            ))}
-            {canModerate(myRole)&&<button onClick={()=>setView("admin")} style={{
-              width:32,height:32,borderRadius:8,background:"#fbbf2415",
-              border:"1px solid #fbbf2430",color:"#fbbf24",fontSize:15,
-              cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0
-            }}>⚙️</button>}
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <Pill T={T} balance={myBalance} />
+          <div style={{display:"flex",gap:4,alignItems:"center"}}>
+            <button onClick={()=>setThemeKey(k=>k==="dark"?"light":"dark")} className="btn-icon" style={{
+              width:34,height:34,borderRadius:10,background:T.card,border:`1px solid ${T.border}`,
+              color:T.text2,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"
+            }}>{themeKey==="dark"?"☀️":"🌙"}</button>
+            <button onClick={()=>setShowNotifs(!showNotifs)} style={{
+              position:"relative",width:34,height:34,borderRadius:10,background:T.card,border:`1px solid ${T.border}`,
+              color:T.text2,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"
+            }}>🔔
+              {myNotifs.length>0&&<span style={{position:"absolute",top:-3,right:-3,minWidth:16,height:16,borderRadius:8,background:"#f97316",color:"#fff",fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px"}}>{myNotifs.length}</span>}
+            </button>
             <button onClick={handleLogout} style={{
-              height:32,borderRadius:8,background:T.card,
-              border:`1px solid ${T.border}`,color:T.text4,
+              height:34,borderRadius:10,background:T.card,border:`1px solid ${T.border}`,color:T.text4,
               padding:"0 10px",fontSize:11,cursor:"pointer",fontFamily:"inherit",flexShrink:0
             }}>Выйти</button>
           </div>
         </div>
       </div>
-      <div onClick={()=>{setProfileTarget(me);setView("profile");}}
-        style={{marginTop:10,background:T.card,border:`1px solid ${T.border}`,borderRadius:12,padding:"9px 13px",display:"flex",alignItems:"center",gap:11,cursor:"pointer"}}
-        onMouseEnter={e=>e.currentTarget.style.background=T.border}
-        onMouseLeave={e=>e.currentTarget.style.background=T.card}>
-        <Avatar member={me} size={34} />
-        <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13,color:T.text}}>{me.name}</div>
-          <div style={{fontSize:11,color:T.accent,marginTop:1}}>Мой профиль →</div></div>
-        <button onClick={e=>{e.stopPropagation();setShowGift(true);}} style={{background:T.border,border:"none",color:T.text2,padding:"5px 11px",borderRadius:8,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>💛</button>
-      </div>
+      {myBalance>DEMURRAGE_THRESHOLD&&<div style={{fontSize:10,color:"#fb923c",textAlign:"right",marginTop:2,width:"100%"}}>
+        демередж: -{cur(calcDemurrage(myBalance,1))}/мес
+      </div>}
     </div>
 
     {/* NOTIFICATIONS DROPDOWN */}
@@ -2741,10 +2739,9 @@ export default function App() {
 
       {/* CAT FILTER */}
       {(tab==="offers"||tab==="requests")&&<div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
-        {(categories||CATEGORIES).map(c=><button key={c} onClick={()=>setCatFilter(c)} style={{
-          background:catFilter===c?T.accent:T.card,border:`1px solid ${catFilter===c?T.accent:T.border}`,
-          color:catFilter===c?"#fff":T.text2,padding:"4px 11px",borderRadius:20,fontSize:12,
-          fontWeight:500,cursor:"pointer",fontFamily:"inherit"}}>{CAT_ICONS[c]} {c}</button>)}
+        {(categories||CATEGORIES).map(c=><button key={c} onClick={()=>setCatFilter(c)}
+          className={`chip ${catFilter===c?"chip-active":""}`}
+          style={{fontSize:12}}>{CAT_ICONS[c]} {c}</button>)}
       </div>}
 
       {/* NEWS TAB */}
@@ -2778,9 +2775,7 @@ export default function App() {
 
       {/* OFFERS */}
       {tab==="offers"&&<div style={{animation:"fadeUp 0.3s ease"}}>
-        <button onClick={()=>setAddingOff(true)}
-          style={{width:"100%",background:T.card,border:`1px dashed ${T.border2}`,borderRadius:14,padding:"11px",
-            color:T.accent,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit",marginBottom:11}}>
+        <button onClick={()=>setAddingOff(true)} className="btn btn-dashed" style={{borderRadius:14,marginBottom:11}}>
           ✦ Опубликовать предложение
         </button>
         {filtOffers.length===0&&<div style={{textAlign:"center",color:T.text5,padding:"32px 0",fontSize:13}}>{search?"Ничего не найдено":"Нет предложений"}</div>}
@@ -2812,7 +2807,7 @@ export default function App() {
 
       {/* REQUESTS */}
       {tab==="requests"&&<div style={{animation:"fadeUp 0.3s ease"}}>
-        <button onClick={()=>setAddingReq(true)} style={{width:"100%",background:T.card,border:`1px dashed ${T.border2}`,borderRadius:14,padding:"11px",color:T.accent,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit",marginBottom:11}}>🙋 Опубликовать запрос</button>
+        <button onClick={()=>setAddingReq(true)} className="btn btn-dashed" style={{borderRadius:14,marginBottom:11}}>🙋 Опубликовать запрос</button>
         {filtReqs.length===0&&<div style={{textAlign:"center",color:T.text5,padding:"28px 0",fontSize:13}}>{search?"Ничего":"Запросов пока нет"}</div>}
         <div style={{display:"flex",flexDirection:"column",gap:9}}>
           {filtReqs.map(req=>{const author=findM(members,req.member),isMyReq=req.member===meId;
@@ -2924,32 +2919,32 @@ export default function App() {
       </div>}
     </div>
 
-    {/* FOOTER */}
-    <div style={{margin:"32px 20px 0",padding:"20px",background:T.card,border:`1px solid ${T.border}`,
-      borderRadius:20,textAlign:"center"}}>
-      <div style={{fontSize:22,marginBottom:6}}>🌾</div>
-      <div style={{fontWeight:700,fontSize:15,color:T.text,marginBottom:4}}>Общий фонд</div>
-      <div style={{fontSize:12,color:T.text4,lineHeight:1.6,marginBottom:14}}>
-        Сообщество взаимопомощи на основе доверия.<br/>
-        Внутренняя валюта · Прозрачные сделки · Без посредников
+    {/* FOOTER — compact with bottom tab bar */}
+    <div style={{margin:"24px 20px 0",padding:"16px 20px",background:T.card,border:`1px solid ${T.border}`,
+      borderRadius:16,textAlign:"center"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:8}}>
+        <span style={{fontSize:18}}>🌾</span>
+        <span style={{fontWeight:700,fontSize:14,color:T.text}}>Общий фонд</span>
       </div>
-      <button onClick={()=>setShowConstitution(true)}
-        style={{display:"inline-flex",alignItems:"center",gap:7,background:"#6366f115",
-          border:"1px solid #6366f130",borderRadius:10,padding:"9px 16px",
-          color:"#818cf8",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-        📜 Правила Общего фонда
-      </button>
-      <div style={{marginTop:16,paddingTop:14,borderTop:`1px solid ${T.border}`,
-        display:"flex",justifyContent:"center",gap:20}}>
-        <button onClick={()=>setView("chat")} style={{background:"none",border:"none",color:T.text4,
-          fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>💬 Чат</button>
-        <button onClick={()=>setView("tasks")} style={{background:"none",border:"none",color:T.text4,
-          fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📋 Задачи</button>
-        <button onClick={()=>setShowGift(true)} style={{background:"none",border:"none",color:T.text4,
-          fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>💛 Подарить</button>
+      <div style={{fontSize:12,color:T.text4,lineHeight:1.5,marginBottom:12}}>
+        Сообщество взаимопомощи на основе доверия
       </div>
-      <div style={{marginTop:12,fontSize:10,color:T.text5,fontFamily:"monospace"}}>
-        v{APP_VERSION} · {new Date().getFullYear()}
+      <div style={{display:"flex",justifyContent:"center",gap:8}}>
+        <button onClick={()=>setShowConstitution(true)}
+          style={{display:"inline-flex",alignItems:"center",gap:6,background:T.accent+"12",
+            border:`1px solid ${T.accent}25`,borderRadius:10,padding:"8px 14px",
+            color:"#818cf8",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+          📜 Правила
+        </button>
+        <button onClick={()=>setShowGift(true)}
+          style={{display:"inline-flex",alignItems:"center",gap:6,background:"#fbbf2412",
+            border:"1px solid #fbbf2425",borderRadius:10,padding:"8px 14px",
+            color:"#fbbf24",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+          💛 Подарить
+        </button>
+      </div>
+      <div style={{marginTop:10,fontSize:10,color:T.text5,fontFamily:"monospace"}}>
+        v{APP_VERSION}
       </div>
     </div>{/* end tab animation wrapper */}
     </div>{/* end scroll container */}
@@ -3022,6 +3017,7 @@ export default function App() {
     {showReviewFor&&<ReviewForm T={T} tx={showReviewFor} members={members} meId={meId}
       onSave={d=>{addReview(d);setShowReviewFor(null);}}
       onClose={()=>setShowReviewFor(null)} />}
+    <BottomTabBar />
     </div>
   </div>;
 }
