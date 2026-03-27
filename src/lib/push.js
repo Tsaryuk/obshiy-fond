@@ -129,3 +129,23 @@ export async function saveNotificationPrefs(memberId, prefs) {
   const data = { member_id: memberId, ...prefs };
   await sb.upsert("notification_prefs", data, "member_id");
 }
+
+// ── Telegram linking ────────────────────────────────────────────────────────
+
+export async function generateTelegramLinkToken(memberId) {
+  const result = await sb.insert("telegram_link_tokens", { member_id: memberId });
+  return result?.token || null;
+}
+
+export async function getTelegramStatus(memberId) {
+  const rows = await sb.select("telegram_users", `member_id=eq.${memberId}`);
+  if (rows.length > 0) {
+    return { linked: true, username: rows[0].telegram_username, active: rows[0].active };
+  }
+  return null;
+}
+
+export async function unlinkTelegram(memberId) {
+  await sb.delete("telegram_users", { member_id: memberId });
+  await sb.update("notification_prefs", { member_id: memberId }, { telegram_enabled: false });
+}

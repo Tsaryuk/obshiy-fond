@@ -8,6 +8,9 @@ import {
   getCurrentSubscription,
   getNotificationPrefs,
   saveNotificationPrefs,
+  generateTelegramLinkToken,
+  getTelegramStatus,
+  unlinkTelegram,
 } from "../lib/push";
 
 const NOTIF_TYPES = [
@@ -41,12 +44,16 @@ function Toggle({ checked, onChange, T }) {
   );
 }
 
+const TG_BOT_USERNAME = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || "obshiy_fond_bot";
+
 export default function NotificationSettings({ meId, T, onBack, notify }) {
   const [supported] = useState(isPushSupported);
   const [permission, setPermission] = useState("default");
   const [subscribed, setSubscribed] = useState(false);
   const [prefs, setPrefs] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [tgStatus, setTgStatus] = useState(null); // null=loading, false=not linked, {username, active}
+  const [tgLinking, setTgLinking] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -56,6 +63,8 @@ export default function NotificationSettings({ meId, T, onBack, notify }) {
       setSubscribed(!!sub);
       const p = await getNotificationPrefs(meId);
       setPrefs(p);
+      const tg = await getTelegramStatus(meId);
+      setTgStatus(tg || false);
     }
     init();
   }, [meId]);
@@ -176,24 +185,99 @@ export default function NotificationSettings({ meId, T, onBack, notify }) {
           ))}
         </div>
 
-        {/* Telegram section — placeholder */}
+        {/* Telegram section */}
+        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: 10, marginTop: 16 }}>
+          Telegram
+        </div>
+
         <div style={{
           background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 14,
-          padding: "14px 16px", marginTop: 12, opacity: 0.6,
+          padding: "14px 16px",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <span style={{ fontSize: 18 }}>✈</span>
             <span style={{ fontWeight: 600, fontSize: 14 }}>Telegram-бот</span>
-            <span style={{
-              fontSize: 10, background: "#fbbf2420", color: "#fbbf24",
-              padding: "2px 7px", borderRadius: 8,
-            }}>
-              скоро
-            </span>
+            {tgStatus && tgStatus.active && (
+              <span style={{
+                fontSize: 10, background: "#22c55e20", color: "#22c55e",
+                padding: "2px 7px", borderRadius: 8,
+              }}>
+                привязан
+              </span>
+            )}
           </div>
-          <div style={{ fontSize: 12, color: "var(--color-text-tertiary)" }}>
-            Привяжите Telegram-аккаунт чтобы получать уведомления в мессенджере
-          </div>
+
+          {tgStatus === null ? (
+            <div style={{ fontSize: 12, color: "var(--color-text-tertiary)" }}>Загрузка...</div>
+          ) : tgStatus === false ? (
+            <>
+              <div style={{ fontSize: 12, color: "var(--color-text-tertiary)", marginBottom: 10 }}>
+                Привяжите Telegram-аккаунт чтобы получать уведомления в мессенджере
+              </div>
+              <button
+                disabled={tgLinking}
+                onClick={async () => {
+                  setTgLinking(true);
+                  const token = await generateTelegramLinkToken(meId);
+                  setTgLinking(false);
+                  if (token) {
+                    window.open(`https://t.me/${TG_BOT_USERNAME}?start=${token}`, "_blank");
+                    notify("Откройте Telegram и нажмите Start");
+                    // Poll for link status after a delay
+                    setTimeout(async () => {
+                      const tg = await getTelegramStatus(meId);
+                      if (tg) setTgStatus(tg);
+                    }, 5000);
+                  } else {
+                    notify("Ошибка создания ссылки");
+                  }
+                }}
+                style={{
+                  background: "#2AABEE", color: "#fff", border: "none", borderRadius: 10,
+                  padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                  fontFamily: "inherit", opacity: tgLinking ? 0.6 : 1,
+                }}
+              >
+                {tgLinking ? "Создание ссылки..." : "Привязать Telegram"}
+              </button>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 12, color: "var(--color-text-tertiary)", marginBottom: 10 }}>
+                Привязан: {tgStatus.username ? `@${tgStatus.username}` : "аккаунт привязан"}
+              </div>
+
+              {/* Telegram enabled toggle */}
+              <div style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                marginBottom: 10,
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 500 }}>Telegram-уведомления</div>
+                <Toggle
+                  checked={prefs.telegram_enabled !== false}
+                  onChange={(val) => updatePref("telegram_enabled", val)}
+                  T={T}
+                />
+              </div>
+
+              <button
+                onClick={async () => {
+                  if (!confirm("Отвязать Telegram? Уведомления перестанут приходить.")) return;
+                  await unlinkTelegram(meId);
+                  setTgStatus(false);
+                  updatePref("telegram_enabled", false);
+                  notify("Telegram отвязан");
+                }}
+                style={{
+                  background: "none", border: "1px solid var(--color-border)", borderRadius: 10,
+                  padding: "7px 14px", fontSize: 12, color: "#f97316", cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                Отвязать Telegram
+              </button>
+            </>
+          )}
         </div>
 
         {saving && (
