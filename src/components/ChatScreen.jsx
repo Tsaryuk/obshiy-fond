@@ -21,7 +21,7 @@ function playNotifSound() {
 }
 
 // Parse @mentions in text and return React nodes
-function renderMessageText(text, members, T, onSelectMember) {
+function renderMessageText(text, members, onSelectMember) {
   if (!text) return null;
   const parts = [];
   let lastIdx = 0;
@@ -33,8 +33,8 @@ function renderMessageText(text, members, T, onSelectMember) {
     const member = members.find(m => m.name.toLowerCase().startsWith(mentionName));
     if (member) {
       parts.push(
-        <span key={match.index} onClick={(e) => { e.stopPropagation(); onSelectMember?.(member.id); }}
-          style={{ color: "#818cf8", fontWeight: 600, cursor: "pointer" }}>@{member.name.split(" ")[0]}</span>
+        <span key={match.index} className="bubble-mention"
+          onClick={(e) => { e.stopPropagation(); onSelectMember?.(member.id); }}>@{member.name.split(" ")[0]}</span>
       );
     } else {
       parts.push(match[0]);
@@ -51,12 +51,11 @@ export default function ChatScreen({ meId, members, messages, groupMessages, onS
   const [text, setText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const [mentionQuery, setMentionQuery] = useState(null); // autocomplete query
+  const [mentionQuery, setMentionQuery] = useState(null);
   const [mentionIdx, setMentionIdx] = useState(0);
-  const [editingMsg, setEditingMsg] = useState(null); // msg being edited
-  const [contextMenu, setContextMenu] = useState(null); // {msg, x, y}
-  const [attachment, setAttachment] = useState(null); // File object
-  const [typingPeers, setTypingPeers] = useState({}); // {peerId: timestamp}
+  const [editingMsg, setEditingMsg] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);
+  const [attachment, setAttachment] = useState(null);
   const [prevMsgCount, setPrevMsgCount] = useState(0);
   const endRef = useRef();
   const inputRef = useRef();
@@ -77,7 +76,6 @@ export default function ChatScreen({ meId, members, messages, groupMessages, onS
   useEffect(() => {
     const total = messages.length + groupMessages.length;
     if (prevMsgCount > 0 && total > prevMsgCount) {
-      // Check if the newest message is not from me
       const allMsgs = [...messages, ...groupMessages];
       const newest = allMsgs[allMsgs.length - 1];
       if (newest && newest.from !== meId) playNotifSound();
@@ -85,13 +83,11 @@ export default function ChatScreen({ meId, members, messages, groupMessages, onS
     setPrevMsgCount(total);
   }, [messages.length, groupMessages.length]);
 
-  // Typing indicator: broadcast via simple state (polling-compatible)
   const lastTypingRef = useRef(0);
   const handleTextChange = useCallback((e) => {
     const val = e.target.value;
     setText(val);
 
-    // @mention autocomplete detection
     const cursor = e.target.selectionStart;
     const before = val.slice(0, cursor);
     const atMatch = before.match(/@(\S*)$/);
@@ -102,16 +98,12 @@ export default function ChatScreen({ meId, members, messages, groupMessages, onS
       setMentionQuery(null);
     }
 
-    // Typing indicator signal
     const now = Date.now();
     if (now - lastTypingRef.current > 2000) {
       lastTypingRef.current = now;
-      // For typing indicator we use a lightweight approach via the existing polling
-      // Store typing state in component — peers see it via presence polling
     }
   }, []);
 
-  // Filtered members for @mention autocomplete
   const mentionMembers = mentionQuery !== null
     ? members.filter(m => m.id !== meId && m.name.toLowerCase().includes(mentionQuery)).slice(0, 5)
     : [];
@@ -127,7 +119,6 @@ export default function ChatScreen({ meId, members, messages, groupMessages, onS
     setTimeout(() => inputRef.current?.focus(), 50);
   }
 
-  // Conversations list
   const convs = members.filter(m => m.id !== meId).map(m => {
     const thread = messages.filter(msg => (msg.from === meId && msg.to === m.id) || (msg.from === m.id && msg.to === meId));
     const last = thread[thread.length - 1];
@@ -136,7 +127,6 @@ export default function ChatScreen({ meId, members, messages, groupMessages, onS
   }).filter(c => c.thread.length > 0 || c.member.id === peer?.id)
     .sort((a, b) => (b.last?.ts || 0) - (a.last?.ts || 0));
 
-  // Search filter
   const filteredConvs = searchQuery
     ? convs.filter(c => {
         const q = searchQuery.toLowerCase();
@@ -192,7 +182,6 @@ export default function ChatScreen({ meId, members, messages, groupMessages, onS
     setContextMenu({ msg, x: e.clientX || e.touches?.[0]?.clientX || 0, y: e.clientY || e.touches?.[0]?.clientY || 0 });
   }
 
-  // Close context menu on click anywhere
   useEffect(() => {
     if (!contextMenu) return;
     const close = () => setContextMenu(null);
@@ -200,38 +189,32 @@ export default function ChatScreen({ meId, members, messages, groupMessages, onS
     return () => window.removeEventListener("click", close);
   }, [contextMenu]);
 
-  // Auto-scroll on new messages
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length, groupMessages.length, view]);
 
-  // Render a single message bubble
+  // ── BUBBLE ──
   const renderBubble = (msg, i, isGroupView) => {
-    const isMe = msg.from === meId;
+    const isMine = msg.from === meId;
     const sender = isGroupView ? members.find(m => m.id === msg.from) : null;
 
     if (msg.deleted) {
       return (
-        <div key={msg.id || i} style={{ display: "flex", justifyContent: isMe ? "flex-end" : "flex-start" }}>
-          <div style={{
-            maxWidth: "75%", background: "transparent", border: `1px dashed ${T.border}`,
-            borderRadius: 16, padding: "9px 13px", color: T.text5, fontStyle: "italic", fontSize: 13
-          }}>
-            Сообщение удалено
-          </div>
+        <div key={msg.id || i} className={`bubble-wrap ${isMine ? "bubble-wrap-me" : "bubble-wrap-other"}`}>
+          <div className="bubble-deleted">Сообщение удалено</div>
         </div>
       );
     }
 
     return (
-      <div key={msg.id || i} style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start" }}>
-        {isGroupView && !isMe && (
-          <div onClick={() => onSelectMember?.(msg.from)}
-            style={{ fontSize: 10, color: T.accent, marginBottom: 2, marginLeft: 8, cursor: "pointer" }}>
+      <div key={msg.id || i} className={`bubble-wrap ${isMine ? "bubble-wrap-me" : "bubble-wrap-other"}`}>
+        {isGroupView && !isMine && (
+          <div className="bubble-sender" onClick={() => onSelectMember?.(msg.from)}>
             {sender?.name?.split(" ")[0] || "?"}
           </div>
         )}
         <div
+          className={`bubble ${isMine ? "bubble-me" : "bubble-other"}`}
           onContextMenu={(e) => handleContextMenu(e, msg)}
           onTouchStart={(e) => {
             if (msg.from !== meId || msg.deleted) return;
@@ -240,15 +223,8 @@ export default function ChatScreen({ meId, members, messages, groupMessages, onS
           }}
           onTouchEnd={(e) => { clearTimeout(e.currentTarget._longPress); }}
           onTouchMove={(e) => { clearTimeout(e.currentTarget._longPress); }}
-          style={{
-            maxWidth: "78%", background: isMe ? "#6366f1" : T.card,
-            border: isMe ? "none" : `1px solid ${T.border}`,
-            borderRadius: isMe ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-            padding: "9px 13px", color: isMe ? "#fff" : T.text, position: "relative",
-            cursor: msg.from === meId ? "context-menu" : "default"
-          }}
+          style={{ cursor: msg.from === meId ? "context-menu" : "default" }}
         >
-          {/* Attachment */}
           {msg.attachment && (
             <div style={{ marginBottom: msg.text ? 6 : 0 }}>
               {/\.(jpg|jpeg|png|gif|webp)$/i.test(msg.attachment) ? (
@@ -257,23 +233,19 @@ export default function ChatScreen({ meId, members, messages, groupMessages, onS
                   onClick={(e) => { e.stopPropagation(); window.open(msg.attachment, "_blank"); }} />
               ) : (
                 <a href={msg.attachment} target="_blank" rel="noopener noreferrer"
-                  style={{ color: isMe ? "#c7d2fe" : "#818cf8", fontSize: 13, textDecoration: "underline" }}
+                  style={{ color: isMine ? "#c7d2fe" : "var(--color-purple)", fontSize: "var(--text-sm)", textDecoration: "underline" }}
                   onClick={(e) => e.stopPropagation()}>
                   {msg.attachmentName || "Файл"}
                 </a>
               )}
             </div>
           )}
-
-          {/* Text with @mentions */}
           {msg.text && (
-            <div style={{ fontSize: 14, lineHeight: 1.4 }}>
-              {renderMessageText(msg.text, members, T, onSelectMember)}
+            <div className="bubble-text">
+              {renderMessageText(msg.text, members, onSelectMember)}
             </div>
           )}
-
-          {/* Time + edited label */}
-          <div style={{ fontSize: 10, color: isMe ? "rgba(255,255,255,0.6)" : T.text5, marginTop: 3, textAlign: "right" }}>
+          <div className={`bubble-time ${isMine ? "bubble-time-me" : "bubble-time-other"}`}>
             {msg.edited && <span style={{ marginRight: 4 }}>ред.</span>}
             {msg.time}
           </div>
@@ -282,98 +254,58 @@ export default function ChatScreen({ meId, members, messages, groupMessages, onS
     );
   };
 
-  // Context menu overlay
+  // ── CONTEXT MENU ──
   const contextMenuUI = contextMenu && (
-    <div style={{
-      position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000,
-    }} onClick={() => setContextMenu(null)}>
-      <div style={{
-        position: "absolute", top: Math.min(contextMenu.y, window.innerHeight - 100),
-        left: Math.min(contextMenu.x, window.innerWidth - 140),
-        background: T.card, border: `1px solid ${T.border}`, borderRadius: 10,
-        boxShadow: "0 4px 20px rgba(0,0,0,0.3)", overflow: "hidden", minWidth: 130, zIndex: 1001
-      }} onClick={(e) => e.stopPropagation()}>
-        <div onClick={() => startEdit(contextMenu.msg)}
-          style={{ padding: "10px 14px", fontSize: 13, color: T.text, cursor: "pointer", borderBottom: `1px solid ${T.border}` }}
-          onMouseEnter={(e) => e.currentTarget.style.background = T.border}
-          onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
-          Редактировать
-        </div>
-        <div onClick={() => handleDelete(contextMenu.msg)}
-          style={{ padding: "10px 14px", fontSize: 13, color: "#f87171", cursor: "pointer" }}
-          onMouseEnter={(e) => e.currentTarget.style.background = T.border}
-          onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
-          Удалить
-        </div>
+    <div className="ctx-menu-overlay" onClick={() => setContextMenu(null)}>
+      <div className="ctx-menu"
+        style={{ top: Math.min(contextMenu.y, window.innerHeight - 100), left: Math.min(contextMenu.x, window.innerWidth - 140) }}
+        onClick={(e) => e.stopPropagation()}>
+        <button className="ctx-menu-item" onClick={() => startEdit(contextMenu.msg)}>Редактировать</button>
+        <button className="ctx-menu-item ctx-menu-item-danger" onClick={() => handleDelete(contextMenu.msg)}>Удалить</button>
       </div>
     </div>
   );
 
-  // Mention autocomplete popup
+  // ── MENTION POPUP ──
   const mentionPopup = mentionMembers.length > 0 && (
-    <div style={{
-      position: "absolute", bottom: "100%", left: 16, right: 16, marginBottom: 4,
-      background: T.card, border: `1px solid ${T.border}`, borderRadius: 12,
-      boxShadow: "0 -4px 16px rgba(0,0,0,0.2)", overflow: "hidden", zIndex: 50
-    }}>
+    <div className="mention-popup">
       {mentionMembers.map((m, i) => (
-        <div key={m.id} onClick={() => insertMention(m)}
-          style={{
-            padding: "8px 14px", display: "flex", alignItems: "center", gap: 10, cursor: "pointer",
-            background: i === mentionIdx ? T.border : "transparent", fontSize: 13, color: T.text
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = T.border}
-          onMouseLeave={(e) => e.currentTarget.style.background = i === mentionIdx ? T.border : "transparent"}>
+        <div key={m.id} className={`mention-item${i === mentionIdx ? " mention-item-active" : ""}`}
+          onClick={() => insertMention(m)}>
           <Avatar member={m} size={28} />
           <div>
-            <div style={{ fontWeight: 600 }}>{m.name}</div>
-            <div style={{ fontSize: 11, color: T.text4 }}>{m.profession || "участник"}</div>
+            <div className="mention-name">{m.name}</div>
+            <div className="mention-role">{m.profession || "участник"}</div>
           </div>
         </div>
       ))}
     </div>
   );
 
-  // Input bar with attachment button, mention autocomplete, edit mode
+  // ── INPUT BAR ──
   const inputBar = (placeholder) => (
-    <div style={{ position: "relative", borderTop: `1px solid ${T.border}`, background: T.bg }}>
+    <div className="chat-input-bar">
       {mentionPopup}
-
-      {/* Edit mode banner */}
       {editingMsg && (
-        <div style={{
-          padding: "6px 16px", background: "#6366f115", borderBottom: `1px solid ${T.border}`,
-          display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12, color: "#818cf8"
-        }}>
+        <div className="chat-edit-banner">
           <span>Редактирование сообщения</span>
-          <button onClick={cancelEdit} style={{ background: "none", border: "none", color: T.text4, cursor: "pointer", fontSize: 16, padding: 0 }}>x</button>
+          <button className="back-btn" onClick={cancelEdit} style={{fontSize:16}}>×</button>
         </div>
       )}
-
-      {/* Attachment preview */}
       {attachment && (
-        <div style={{
-          padding: "6px 16px", display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: T.text3,
-          borderBottom: `1px solid ${T.border}`
-        }}>
+        <div className="chat-attachment-preview">
           <span>{attachment.name}</span>
-          <button onClick={() => setAttachment(null)} style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", fontSize: 14, padding: 0 }}>x</button>
+          <button className="back-btn" onClick={() => setAttachment(null)} style={{color:"var(--color-danger)",fontSize:14}}>×</button>
         </div>
       )}
-
-      <div style={{ padding: "10px 16px 16px", display: "flex", gap: 8, alignItems: "center" }}>
-        {/* File attach button */}
-        <button onClick={() => fileRef.current?.click()} style={{
-          background: "none", border: "none", color: T.text4, fontSize: 20, cursor: "pointer", padding: 0, lineHeight: 1, flexShrink: 0
-        }}>+</button>
+      <div className="chat-input-row">
+        <button className="chat-attach-btn" onClick={() => fileRef.current?.click()}>+</button>
         <input ref={fileRef} type="file" style={{ display: "none" }} onChange={handleFileSelect}
           accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip" />
-
         <input ref={inputRef} value={text} onChange={handleTextChange}
           onKeyDown={e => {
             if (e.key === "Enter" && !e.shiftKey) { sendMsg(); e.preventDefault(); }
             if (e.key === "Escape" && editingMsg) cancelEdit();
-            // Arrow keys for mention navigation
             if (mentionMembers.length > 0) {
               if (e.key === "ArrowDown") { e.preventDefault(); setMentionIdx(i => Math.min(i + 1, mentionMembers.length - 1)); }
               if (e.key === "ArrowUp") { e.preventDefault(); setMentionIdx(i => Math.max(i - 1, 0)); }
@@ -382,15 +314,31 @@ export default function ChatScreen({ meId, members, messages, groupMessages, onS
               }
             }
           }}
-          placeholder={placeholder} style={{
-            flex: 1, background: T.card, border: `1px solid ${T.border}`,
-            borderRadius: 20, color: T.text, padding: "10px 14px", fontSize: 13, fontFamily: "inherit", outline: "none"
-          }} />
-        <button onClick={sendMsg} style={{
-          background: editingMsg ? "#22c55e" : "#6366f1", border: "none", borderRadius: "50%", width: 38, height: 38,
-          color: "#fff", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-        }}>{editingMsg ? "ok" : String.fromCharCode(8593)}</button>
+          className="chat-input" placeholder={placeholder} />
+        <button className={`chat-send-btn${editingMsg ? " chat-send-edit" : ""}`}
+          onClick={sendMsg}>{editingMsg ? "ok" : "↑"}</button>
       </div>
+    </div>
+  );
+
+  // ── CHAT HEADER (reusable) ──
+  const chatHeader = (onBackClick, avatar, name, sub, onNameClick) => (
+    <div className="chat-header">
+      <button className="back-btn" onClick={onBackClick}>← назад</button>
+      {avatar}
+      <div className="flex-1">
+        <div className="chat-header-name" onClick={onNameClick}>{name}</div>
+        <div className="chat-header-sub">{sub}</div>
+      </div>
+      <button className="chat-attach-btn" onClick={() => setShowSearch(s => !s)} style={{fontSize:16}}>🔍</button>
+    </div>
+  );
+
+  // ── SEARCH BAR (reusable) ──
+  const searchBar = showSearch && (
+    <div style={{ padding: "8px 16px", borderBottom: "1px solid var(--color-border)" }}>
+      <input className="chat-input" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+        placeholder="Поиск по сообщениям..." autoFocus style={{borderRadius:"var(--radius-md)"}} />
     </div>
   );
 
@@ -401,37 +349,18 @@ export default function ChatScreen({ meId, members, messages, groupMessages, onS
       : groupMessages;
 
     return (
-      <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: T.bg, color: T.text }} {...swipe}>
+      <div className="chat-layout" {...swipe}>
         {contextMenuUI}
-        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 10, background: T.bg, position: "sticky", top: 0, zIndex: 10 }}>
-          <button onClick={() => { setView("list"); setSearchQuery(""); }} style={{ background: "none", border: "none", color: T.text4, cursor: "pointer", fontFamily: "inherit", fontSize: 13, padding: 0 }}>
-            {String.fromCharCode(8592)} назад
-          </button>
-          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#6366f120", border: "1px solid #6366f140", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
-            {String.fromCharCode(127806)}
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600, fontSize: 14, color: T.text }}>Общий форум</div>
-            <div style={{ fontSize: 11, color: T.text4 }}>{members.length} участников</div>
-          </div>
-          <button onClick={() => setShowSearch(s => !s)} style={{ background: "none", border: "none", color: T.text4, cursor: "pointer", fontSize: 16, padding: 0 }}>
-            {String.fromCharCode(128269)}
-          </button>
-        </div>
-
-        {showSearch && (
-          <div style={{ padding: "8px 16px", borderBottom: `1px solid ${T.border}` }}>
-            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Поиск по сообщениям..." autoFocus
-              style={{ width: "100%", background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, color: T.text, padding: "8px 12px", fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
-          </div>
+        {chatHeader(
+          () => { setView("list"); setSearchQuery(""); },
+          <div className="conv-forum-icon" style={{width:36,height:36,fontSize:18}}>🌾</div>,
+          "Общий форум",
+          `${members.length} участников`
         )}
-
-        <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+        {searchBar}
+        <div className="chat-messages">
           {filteredGroupMsgs.length === 0 && (
-            <div style={{ textAlign: "center", color: T.text5, marginTop: 40, fontSize: 13 }}>
-              {searchQuery ? "Ничего не найдено" : "Напиши первым!"}
-            </div>
+            <div className="chat-empty">{searchQuery ? "Ничего не найдено" : "Напиши первым!"}</div>
           )}
           {filteredGroupMsgs.map((msg, i) => renderBubble(msg, i, true))}
           <div ref={endRef} />
@@ -449,37 +378,19 @@ export default function ChatScreen({ meId, members, messages, groupMessages, onS
       : peerThread;
 
     return (
-      <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: T.bg, color: T.text }} {...swipe}>
+      <div className="chat-layout" {...swipe}>
         {contextMenuUI}
-        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 12, background: T.bg, position: "sticky", top: 0, zIndex: 10 }}>
-          <button onClick={() => { setView("list"); setSearchQuery(""); setShowSearch(false); }} style={{ background: "none", border: "none", color: T.text4, cursor: "pointer", fontFamily: "inherit", fontSize: 13, padding: 0 }}>
-            {String.fromCharCode(8592)} назад
-          </button>
-          <Avatar member={peer} size={34} />
-          <div style={{ flex: 1 }}>
-            <div onClick={() => onSelectMember?.(peer.id)} style={{ fontWeight: 600, fontSize: 14, color: T.accent, cursor: "pointer" }}>
-              {peer.name} {String.fromCharCode(8594)}
-            </div>
-            <div style={{ fontSize: 11, color: T.text4 }}>{peer.profession || "участник"}</div>
-          </div>
-          <button onClick={() => setShowSearch(s => !s)} style={{ background: "none", border: "none", color: T.text4, cursor: "pointer", fontSize: 16, padding: 0 }}>
-            {String.fromCharCode(128269)}
-          </button>
-        </div>
-
-        {showSearch && (
-          <div style={{ padding: "8px 16px", borderBottom: `1px solid ${T.border}` }}>
-            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Поиск по сообщениям..." autoFocus
-              style={{ width: "100%", background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, color: T.text, padding: "8px 12px", fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
-          </div>
+        {chatHeader(
+          () => { setView("list"); setSearchQuery(""); setShowSearch(false); },
+          <Avatar member={peer} size={34} />,
+          <>{peer.name} →</>,
+          peer.profession || "участник",
+          () => onSelectMember?.(peer.id)
         )}
-
-        <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+        {searchBar}
+        <div className="chat-messages">
           {filteredThread.length === 0 && (
-            <div style={{ textAlign: "center", color: T.text5, marginTop: 40, fontSize: 13 }}>
-              {searchQuery ? "Ничего не найдено" : "Начни переписку!"}
-            </div>
+            <div className="chat-empty">{searchQuery ? "Ничего не найдено" : "Начни переписку!"}</div>
           )}
           {filteredThread.map((msg, i) => renderBubble(msg, i, false))}
           <div ref={endRef} />
@@ -491,98 +402,72 @@ export default function ChatScreen({ meId, members, messages, groupMessages, onS
 
   // ── LIST VIEW ──
   return (
-    <div style={{ animation: "fadeUp 0.25s ease", minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "'DM Sans',sans-serif" }} {...swipe}>
-      <div style={{ padding: "18px 20px 0", display: "flex", alignItems: "center", gap: 12 }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", color: T.text4, fontSize: 13, cursor: "pointer", fontFamily: "inherit", padding: 0 }}>
-          {String.fromCharCode(8592)} назад
-        </button>
-        <div style={{ fontSize: 19, fontWeight: 700, flex: 1 }}>Сообщения</div>
-        <button onClick={() => setShowSearch(s => !s)} style={{ background: "none", border: "none", color: T.text4, cursor: "pointer", fontSize: 16, padding: 0 }}>
-          {String.fromCharCode(128269)}
-        </button>
+    <div className="anim-fade-up" style={{minHeight:"100vh"}} {...swipe}>
+      <div className="flex items-center gap-3" style={{padding:"18px 20px 0"}}>
+        <button className="back-btn" onClick={onBack}>← назад</button>
+        <div className="page-title flex-1">Сообщения</div>
+        <button className="chat-attach-btn" onClick={() => setShowSearch(s => !s)} style={{fontSize:16}}>🔍</button>
       </div>
 
-      {/* Search bar */}
       {showSearch && (
         <div style={{ padding: "8px 20px" }}>
-          <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Поиск по сообщениям и контактам..." autoFocus
-            style={{ width: "100%", background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, color: T.text, padding: "10px 14px", fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
+          <input className="chat-input" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Поиск по сообщениям и контактам..." autoFocus style={{borderRadius:"var(--radius-md)"}} />
         </div>
       )}
 
-      <div style={{ padding: "12px 20px" }}>
+      <div className="page-section">
         {/* Group forum card */}
-        <div onClick={() => setView("group")} style={{
-          display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
-          background: "#6366f115", border: "1px solid #6366f130", borderRadius: 14, marginBottom: 14, cursor: "pointer"
-        }}
-          onMouseEnter={e => e.currentTarget.style.background = "#6366f120"}
-          onMouseLeave={e => e.currentTarget.style.background = "#6366f115"}>
-          <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#6366f120", border: "1px solid #6366f140", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
-            {String.fromCharCode(127806)}
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600, fontSize: 14, color: "#818cf8" }}>Общий форум</div>
-            <div style={{ fontSize: 12, color: T.text4, marginTop: 1 }}>
+        <div className="conv-forum" onClick={() => setView("group")}>
+          <div className="conv-forum-icon">🌾</div>
+          <div className="flex-1">
+            <div style={{fontWeight:600,fontSize:"var(--text-base)",color:"var(--color-purple)"}}>Общий форум</div>
+            <div style={{fontSize:"var(--text-xs)",color:"var(--color-text-muted)",marginTop:1}}>
               {groupMessages.length > 0
                 ? groupMessages[groupMessages.length - 1].text.slice(0, 40) + "..."
                 : `${members.length} участников`}
             </div>
           </div>
-          {groupMessages.length > 0 && <div style={{ fontSize: 11, color: T.text5 }}>{groupMessages[groupMessages.length - 1].time}</div>}
+          {groupMessages.length > 0 && <div className="conv-time">{groupMessages[groupMessages.length - 1].time}</div>}
         </div>
 
         {/* Quick access avatars */}
         <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 12, color: T.text4, marginBottom: 8 }}>Личные сообщения</div>
-          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+          <div className="section-label-sm">Личные сообщения</div>
+          <div className="quick-avatars">
             {members.filter(m => m.id !== meId && !m.frozen).map(m => (
-              <div key={m.id} onClick={() => { setPeer(m); setView("thread"); }}
-                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, cursor: "pointer", flexShrink: 0 }}>
+              <div key={m.id} className="quick-avatar-item"
+                onClick={() => { setPeer(m); setView("thread"); }}>
                 <Avatar member={m} size={40} />
-                <div style={{ fontSize: 10, color: T.text3, maxWidth: 48, textAlign: "center", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name.split(" ")[0]}</div>
+                <div className="quick-avatar-name">{m.name.split(" ")[0]}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Conversation list */}
-        {filteredConvs.length === 0 && !searchQuery && (
-          <div style={{ textAlign: "center", color: T.text5, padding: "24px 0", fontSize: 13 }}>Нет переписок</div>
-        )}
-        {filteredConvs.length === 0 && searchQuery && (
-          <div style={{ textAlign: "center", color: T.text5, padding: "24px 0", fontSize: 13 }}>Ничего не найдено</div>
-        )}
-        {filteredConvs.map(({ member: m, thread, last, unread }) => (
-          <div key={m.id} style={{
-            display: "flex", alignItems: "center", gap: 8, padding: "11px 13px",
-            background: T.card, border: `1px solid ${T.border}`, borderRadius: 13, marginBottom: 8
-          }}
-            onMouseEnter={e => e.currentTarget.style.background = T.border}
-            onMouseLeave={e => e.currentTarget.style.background = T.card}>
-            <div onClick={() => openThread(m)} style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, cursor: "pointer", minWidth: 0 }}>
-              <div style={{ position: "relative", flexShrink: 0 }}>
-                <Avatar member={m} size={42} />
-                {unread > 0 && <div style={{
-                  position: "absolute", top: -2, right: -2, width: 16, height: 16, borderRadius: "50%",
-                  background: "#6366f1", fontSize: 9, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center"
-                }}>{unread}</div>}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: 14, color: T.text, marginBottom: 2 }}>{m.name}</div>
-                <div style={{ fontSize: 12, color: T.text4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {last ? (last.deleted ? "Сообщение удалено" : (last.from === meId ? "Вы: " : "") + (last.attachment && !last.text ? "Файл" : last.text)) : "Нет сообщений"}
+        {filteredConvs.length === 0 && <div className="empty">{searchQuery ? "Ничего не найдено" : "Нет переписок"}</div>}
+        <div className="stagger">
+          {filteredConvs.map(({ member: m, thread, last, unread }) => (
+            <div key={m.id} className="conv-item">
+              <div className="flex items-center gap-3 flex-1" style={{cursor:"pointer",minWidth:0}} onClick={() => openThread(m)}>
+                <div className="conv-avatar-wrap">
+                  <Avatar member={m} size={42} />
+                  {unread > 0 && <div className="conv-unread">{unread}</div>}
                 </div>
+                <div className="flex-1" style={{minWidth:0}}>
+                  <div className="conv-name">{m.name}</div>
+                  <div className="conv-preview">
+                    {last ? (last.deleted ? "Сообщение удалено" : (last.from === meId ? "Вы: " : "") + (last.attachment && !last.text ? "Файл" : last.text)) : "Нет сообщений"}
+                  </div>
+                </div>
+                {last && <div className="conv-time">{last.time}</div>}
               </div>
-              {last && <div style={{ fontSize: 10, color: T.text5, flexShrink: 0 }}>{last.time}</div>}
+              <button className="btn btn-sm btn-ghost" onClick={() => onSelectMember?.(m.id)}
+                style={{padding:"4px 8px",fontSize:"var(--text-xs)"}}>👤</button>
             </div>
-            <button onClick={() => onSelectMember?.(m.id)}
-              style={{ background: "none", border: `1px solid ${T.border}`, color: T.text4, fontSize: 12, padding: "4px 8px", borderRadius: 7, cursor: "pointer", flexShrink: 0 }}>
-              {String.fromCharCode(128100)}
-            </button>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
