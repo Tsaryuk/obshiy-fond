@@ -509,8 +509,8 @@ export default function App() {
   function deleteNews(id){setNews(p=>p.filter(n=>n.id!==id));}
 
   // ── chat ──
-  async function sendMessage(from, to, text) {
-    if(text===null) { // mark-read call
+  async function sendMessage(from, to, text, attachment) {
+    if(text===null && !attachment) { // mark-read call
       const unread=messages.filter(m=>m.to===meId&&m.from===to&&!m.read);
       setMessages(p=>p.map(m=>m.to===meId&&m.from===to?{...m,read:true}:m));
       for(const msg of unread) sb.update("messages",{id:msg.id},{read:true});
@@ -520,14 +520,56 @@ export default function App() {
     const time = now.toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"});
     const id=uid();
     const isGroup=(to==="group");
-    await sb.insert("messages",{id,from_member:from,to_member:isGroup?"group":to,
-      body:text,date:time,is_group:isGroup});
-    if(isGroup) {
-      setGroupMessages(p=>[...p,{id,from,text,time,ts:now.getTime()}]);
-    } else {
-      setMessages(p=>[...p,{id,from,to,text,time,ts:now.getTime(),read:false}]);
-      addNotification(to,"chat",`${me.name}: ${text.slice(0,40)}`);
+
+    // Upload attachment if present
+    let attachmentUrl = null;
+    let attachmentName = null;
+    if(attachment) {
+      const ext = attachment.name.split(".").pop();
+      const path = `chat/${id}.${ext}`;
+      attachmentUrl = await sb.upload("chat-files", path, attachment);
+      attachmentName = attachment.name;
     }
+
+    const row = {id,from_member:from,to_member:isGroup?"group":to,
+      body:text||"",date:time,is_group:isGroup,created_ts:now.getTime()};
+    if(attachmentUrl) { row.attachment = attachmentUrl; row.attachment_name = attachmentName; }
+
+    await sb.insert("messages",row);
+    const msg = {id,from,text:text||"",time,ts:now.getTime(),read:false,edited:false,deleted:false,
+      attachment:attachmentUrl,attachmentName};
+
+    if(isGroup) {
+      setGroupMessages(p=>[...p,msg]);
+    } else {
+      setMessages(p=>[...p,{...msg,to}]);
+      addNotification(to,"chat",`${me.name}: ${(text||attachmentName||"").slice(0,40)}`);
+    }
+
+    // Notify @mentioned members
+    if(text) {
+      const mentionRegex = /@(\S+)/g;
+      let match;
+      while((match=mentionRegex.exec(text))!==null) {
+        const mentionName = match[1].toLowerCase();
+        const mentioned = members.find(m=>m.id!==from && m.name.toLowerCase().startsWith(mentionName));
+        if(mentioned && mentioned.id!==to) {
+          addNotification(mentioned.id,"mention",`${me.name} упомянул вас в чате`);
+        }
+      }
+    }
+  }
+
+  async function editMessage(msgId, newText, isGroup) {
+    await sb.update("messages",{id:msgId},{body:newText,edited:true});
+    const setter = isGroup ? setGroupMessages : setMessages;
+    setter(p=>p.map(m=>m.id===msgId?{...m,text:newText,edited:true}:m));
+  }
+
+  async function deleteMessage(msgId, isGroup) {
+    await sb.update("messages",{id:msgId},{deleted:true,body:""});
+    const setter = isGroup ? setGroupMessages : setMessages;
+    setter(p=>p.map(m=>m.id===msgId?{...m,text:"",deleted:true}:m));
   }
 
   // ── reviews ──
@@ -644,7 +686,8 @@ export default function App() {
 
   if(view==="chat") return <div style={WRAP}><style>{GCSS}</style>{notif&&<Notif msg={notif}/>}
     <div style={{...INNER,paddingBottom:"calc(var(--nav-height) + var(--safe-area-bottom) + 8px)"}}><ChatScreen meId={meId} members={members} messages={messages}
-      onSend={sendMessage} onBack={()=>{setChatInitPeer(null);setChatInitMsg("");goBack();}} groupMessages={groupMessages} T={T} onSelectMember={goToMember}
+      onSend={sendMessage} onEdit={editMessage} onDelete={deleteMessage}
+      onBack={()=>{setChatInitPeer(null);setChatInitMsg("");goBack();}} groupMessages={groupMessages} T={T} onSelectMember={goToMember}
       initialPeerId={chatInitPeer} initialMsg={chatInitMsg}/>
     <VersionFooter T={T}/></div><BottomTabBar /></div>;
 

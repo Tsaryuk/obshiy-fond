@@ -40,6 +40,9 @@ export const toReview = (r) => r ? ({
 export const toMsg = (r) => r ? ({
   id: r.id, from: r.from_member, to: r.to_member,
   text: r.body || "", time: r.date || "", isGroup: r.is_group || false, read: r.read || false,
+  edited: r.edited || false, deleted: r.deleted || false,
+  attachment: r.attachment || null, attachmentName: r.attachment_name || null,
+  ts: r.created_ts || 0,
 }) : null;
 
 export const toNotif = (r) => r ? ({
