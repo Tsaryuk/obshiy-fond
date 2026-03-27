@@ -193,6 +193,17 @@ export default function App() {
   const tabIdx  = tabKeys.indexOf(tab);
   const [tabDir, setTabDir] = useState(null); // "left" | "right"
   const [tabKey, setTabKey] = useState(0); // force re-render for animation
+  const tabsRef = useRef(null);
+
+  // Scroll active tab into view
+  useEffect(() => {
+    const container = tabsRef.current;
+    if (!container) return;
+    const activeBtn = container.children[tabIdx];
+    if (!activeBtn) return;
+    const left = activeBtn.offsetLeft - container.offsetLeft - 16;
+    container.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+  }, [tab, tabIdx]);
 
   // Pull-to-refresh state
   const scrollRef = useRef(null);
@@ -830,7 +841,7 @@ export default function App() {
     </div>
 
     {/* TABS */}
-    <div className="htabs" style={{top:157,marginTop:8}}>
+    <div ref={tabsRef} className="htabs" style={{top:157,marginTop:8}}>
       {TABS_DEF.map(t=>{
         const badge=t.key==="requests"?requests.filter(r=>r.status==="open").length
           :t.key==="news"?pinnedNews.length:0;
