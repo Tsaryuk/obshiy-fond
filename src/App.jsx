@@ -757,36 +757,60 @@ export default function App() {
   return <div style={WRAP}><style>{GCSS}</style>
     {notif&&<Notif msg={notif} />}
     <div style={{...INNER,paddingBottom:"calc(var(--nav-height) + var(--safe-area-bottom) + 8px)"}}>
-    {/* HEADER */}
-    <div className="header" style={{padding:"14px 20px 10px",borderBottom:"1px solid var(--color-border)",flexDirection:"column",gap:0}}>
-      <div className="flex justify-between items-center w-full">
-        <div className="flex items-center gap-3">
-          <div style={{fontSize:28,lineHeight:1}}>🌾</div>
-          <div>
-            <div style={{fontSize:"var(--text-xl)",fontWeight:700,letterSpacing:"var(--tracking-tight)",lineHeight:1.2}}>Общий фонд</div>
-            <div style={{fontSize:"var(--text-xs)",color:"var(--color-text-muted)",marginTop:1}}>{members.length} участников</div>
+    {/* STICKY TOP: HEADER + SEARCH + TABS */}
+    <div className="header" style={{padding:0,flexDirection:"column",gap:0,borderBottom:"none"}}>
+      <div style={{padding:"14px 20px 10px",borderBottom:"1px solid var(--color-border)",display:"flex",flexDirection:"column",gap:0}}>
+        <div className="flex justify-between items-center w-full">
+          <div className="flex items-center gap-3">
+            <div style={{fontSize:28,lineHeight:1}}>🌾</div>
+            <div>
+              <div style={{fontSize:"var(--text-xl)",fontWeight:700,letterSpacing:"var(--tracking-tight)",lineHeight:1.2}}>Общий фонд</div>
+              <div style={{fontSize:"var(--text-xs)",color:"var(--color-text-muted)",marginTop:1}}>{members.length} участников</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Pill balance={myBalance} />
+            <div className="flex items-center gap-1">
+              <button className="btn-icon" onClick={()=>setThemeKey(k=>k==="dark"?"light":"dark")}
+                style={{width:34,height:34,borderRadius:"var(--radius-md)"}}>{themeKey==="dark"?"☀️":"🌙"}</button>
+              <button className="btn-icon" onClick={()=>setShowNotifs(!showNotifs)}
+                style={{width:34,height:34,borderRadius:"var(--radius-md)",position:"relative"}}>🔔
+                {myNotifs.length>0&&<span className="conv-unread" style={{top:-3,right:-3,background:"var(--color-orange)"}}>{myNotifs.length}</span>}
+              </button>
+              <button className="btn btn-sm btn-ghost" onClick={handleLogout} style={{height:34}}>Выйти</button>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Pill balance={myBalance} />
-          <div className="flex items-center gap-1">
-            <button className="btn-icon" onClick={()=>setThemeKey(k=>k==="dark"?"light":"dark")}
-              style={{width:34,height:34,borderRadius:"var(--radius-md)"}}>{themeKey==="dark"?"☀️":"🌙"}</button>
-            <button className="btn-icon" onClick={()=>setShowNotifs(!showNotifs)}
-              style={{width:34,height:34,borderRadius:"var(--radius-md)",position:"relative"}}>🔔
-              {myNotifs.length>0&&<span className="conv-unread" style={{top:-3,right:-3,background:"var(--color-orange)"}}>{myNotifs.length}</span>}
-            </button>
-            <button className="btn btn-sm btn-ghost" onClick={handleLogout} style={{height:34}}>Выйти</button>
-          </div>
+        {myBalance>DEMURRAGE_THRESHOLD&&<div style={{fontSize:"var(--text-2xs)",color:"var(--color-orange)",textAlign:"right",marginTop:2,width:"100%"}}>
+          демередж: -{cur(calcDemurrage(myBalance,1))}/мес
+        </div>}
+      </div>
+
+      {/* SEARCH */}
+      <div style={{padding:"9px 20px 0",background:"var(--color-bg)"}}>
+        <div className="search-wrap">
+          <input className="search-input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Поиск по названию, категории…" />
+          <span className="search-icon">🔍</span>
+          {search&&<button className="search-clear" onClick={()=>setSearch("")}>×</button>}
         </div>
       </div>
-      {myBalance>DEMURRAGE_THRESHOLD&&<div style={{fontSize:"var(--text-2xs)",color:"var(--color-orange)",textAlign:"right",marginTop:2,width:"100%"}}>
-        демередж: -{cur(calcDemurrage(myBalance,1))}/мес
-      </div>}
+
+      {/* TABS */}
+      <div ref={tabsRef} className="htabs" style={{position:"relative",marginTop:8}}>
+        {TABS_DEF.map(t=>{
+          const badge=t.key==="requests"?requests.filter(r=>r.status==="open").length
+            :t.key==="news"?pinnedNews.length:0;
+          return <button key={t.key} onClick={()=>changeTab(t.key, tabKeys.indexOf(t.key) > tabIdx ? "left" : "right")}
+            className={`htab${tab===t.key?" htab-active":""}`}>
+            {t.l}
+            {badge>0&&<span className="htab-badge">{badge}</span>}
+          </button>;
+        })}
+      </div>
     </div>
 
-    {/* NOTIFICATIONS DROPDOWN */}
-    {showNotifs&&<div style={{position:"sticky",top:118,background:"var(--color-surface)",border:`1px solid ${"var(--color-border)"}`,
+    {/* NOTIFICATIONS DROPDOWN (overlay) */}
+    {showNotifs&&<div style={{background:"var(--color-surface)",border:`1px solid ${"var(--color-border)"}`,
       borderRadius:0,borderLeft:"none",borderRight:"none",zIndex:45,maxHeight:260,overflowY:"auto"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 16px",
         borderBottom:`1px solid ${"var(--color-border)"}`,position:"sticky",top:0,background:"var(--color-surface)",zIndex:1}}>
@@ -830,28 +854,6 @@ export default function App() {
           </div>
         ))}
     </div>}
-
-    {/* SEARCH */}
-    <div style={{padding:"9px 20px 0",position:"sticky",top:118,background:"var(--color-bg)",zIndex:40}}>
-      <div className="search-wrap">
-        <input className="search-input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Поиск по названию, категории…" />
-        <span className="search-icon">🔍</span>
-        {search&&<button className="search-clear" onClick={()=>setSearch("")}>×</button>}
-      </div>
-    </div>
-
-    {/* TABS */}
-    <div ref={tabsRef} className="htabs" style={{top:157,marginTop:8}}>
-      {TABS_DEF.map(t=>{
-        const badge=t.key==="requests"?requests.filter(r=>r.status==="open").length
-          :t.key==="news"?pinnedNews.length:0;
-        return <button key={t.key} onClick={()=>changeTab(t.key, tabKeys.indexOf(t.key) > tabIdx ? "left" : "right")}
-          className={`htab${tab===t.key?" htab-active":""}`}>
-          {t.l}
-          {badge>0&&<span className="htab-badge">{badge}</span>}
-        </button>;
-      })}
-    </div>
 
     <div ref={scrollRef} style={{padding:"12px 20px",paddingBottom:80}} {...swipeMain}>
 
