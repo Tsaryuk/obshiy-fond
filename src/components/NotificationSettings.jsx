@@ -26,7 +26,7 @@ function Toggle({ checked, onChange, T }) {
       onClick={() => onChange(!checked)}
       style={{
         width: 44, height: 24, borderRadius: 12, border: "none",
-        background: checked ? "#6366f1" : (T.border2 || "#2d3548"),
+        background: checked ? "#6366f1" : ("var(--color-border-strong)" || "#2d3548"),
         position: "relative", cursor: "pointer", transition: "background 0.2s",
         flexShrink: 0,
       }}
@@ -92,14 +92,14 @@ export default function NotificationSettings({ meId, T, onBack, notify }) {
   }
 
   if (!prefs) return (
-    <div style={{ padding: "20px", textAlign: "center", color: T.text3 }}>Загрузка...</div>
+    <div style={{ padding: "20px", textAlign: "center", color: "var(--color-text-tertiary)" }}>Загрузка...</div>
   );
 
   return (
     <div style={{ animation: "fadeUp 0.25s ease" }}>
       <div style={{ padding: "18px 20px 0" }}>
         <button onClick={onBack} style={{
-          background: "none", border: "none", color: T.text4, fontSize: 13,
+          background: "none", border: "none", color: "var(--color-text-muted)", fontSize: 13,
           cursor: "pointer", fontFamily: "inherit", padding: 0,
         }}>
           ← назад
@@ -108,19 +108,19 @@ export default function NotificationSettings({ meId, T, onBack, notify }) {
 
       <div style={{ padding: "14px 20px" }}>
         <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 4 }}>Уведомления</div>
-        <div style={{ fontSize: 13, color: T.text3, marginBottom: 18 }}>
+        <div style={{ fontSize: 13, color: "var(--color-text-tertiary)", marginBottom: 18 }}>
           Настройте какие уведомления вы хотите получать
         </div>
 
         {/* Push toggle */}
         <div style={{
-          background: T.card, border: `1px solid ${T.border}`, borderRadius: 14,
+          background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 14,
           padding: "14px 16px", marginBottom: 12,
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <div style={{ fontWeight: 600, fontSize: 14 }}>Push-уведомления</div>
-              <div style={{ fontSize: 12, color: T.text3, marginTop: 3 }}>
+              <div style={{ fontSize: 12, color: "var(--color-text-tertiary)", marginTop: 3 }}>
                 {!supported
                   ? "Не поддерживается этим браузером"
                   : permission === "denied"
@@ -146,12 +146,12 @@ export default function NotificationSettings({ meId, T, onBack, notify }) {
         </div>
 
         {/* Notification type toggles */}
-        <div style={{ fontSize: 13, fontWeight: 600, color: T.text2, marginBottom: 10 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: 10 }}>
           Типы уведомлений
         </div>
 
         <div style={{
-          background: T.card, border: `1px solid ${T.border}`, borderRadius: 14,
+          background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 14,
           overflow: "hidden",
         }}>
           {NOTIF_TYPES.map((nt, i) => (
@@ -160,12 +160,12 @@ export default function NotificationSettings({ meId, T, onBack, notify }) {
               style={{
                 display: "flex", justifyContent: "space-between", alignItems: "center",
                 padding: "12px 16px",
-                borderBottom: i < NOTIF_TYPES.length - 1 ? `1px solid ${T.border}` : "none",
+                borderBottom: i < NOTIF_TYPES.length - 1 ? "1px solid var(--color-border)" : "none",
               }}
             >
               <div style={{ flex: 1, marginRight: 12 }}>
                 <div style={{ fontSize: 13, fontWeight: 500 }}>{nt.label}</div>
-                <div style={{ fontSize: 11, color: T.text4, marginTop: 2 }}>{nt.desc}</div>
+                <div style={{ fontSize: 11, color: "var(--color-text-muted)", marginTop: 2 }}>{nt.desc}</div>
               </div>
               <Toggle
                 checked={prefs[nt.key] !== false}
@@ -178,7 +178,7 @@ export default function NotificationSettings({ meId, T, onBack, notify }) {
 
         {/* Telegram section — placeholder */}
         <div style={{
-          background: T.card, border: `1px solid ${T.border}`, borderRadius: 14,
+          background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 14,
           padding: "14px 16px", marginTop: 12, opacity: 0.6,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
@@ -191,14 +191,14 @@ export default function NotificationSettings({ meId, T, onBack, notify }) {
               скоро
             </span>
           </div>
-          <div style={{ fontSize: 12, color: T.text3 }}>
+          <div style={{ fontSize: 12, color: "var(--color-text-tertiary)" }}>
             Привяжите Telegram-аккаунт чтобы получать уведомления в мессенджере
           </div>
         </div>
 
         {saving && (
           <div style={{
-            fontSize: 11, color: T.text4, textAlign: "center", marginTop: 10,
+            fontSize: 11, color: "var(--color-text-muted)", textAlign: "center", marginTop: 10,
           }}>
             Сохранение...
           </div>

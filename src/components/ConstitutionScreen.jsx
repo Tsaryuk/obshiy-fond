@@ -5,15 +5,15 @@ import { DEMURRAGE_RATE, DEMURRAGE_THRESHOLD, APP_VERSION } from "../lib/constan
 function RuleCard({ rule, T }) {
   const [open, setOpen] = useState(false);
   return (
-    <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:14,overflow:"hidden",marginBottom:8}}>
+    <div style={{background:"var(--color-surface)",border:"1px solid var(--color-border)",borderRadius:14,overflow:"hidden",marginBottom:8}}>
       <div onClick={()=>setOpen(!open)} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",cursor:"pointer"}}
-        onMouseEnter={e=>e.currentTarget.style.background=T.border}
+        onMouseEnter={e=>e.currentTarget.style.background="var(--color-border)"}
         onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-        <div style={{width:38,height:38,borderRadius:10,background:T.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{rule.icon}</div>
-        <div style={{fontWeight:600,fontSize:14,color:T.text,flex:1}}>{rule.title}</div>
-        <div style={{color:T.text4,fontSize:16,transition:"transform 0.2s",transform:open?"rotate(180deg)":"rotate(0deg)"}}>▾</div>
+        <div style={{width:38,height:38,borderRadius:10,background:"var(--color-border)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{rule.icon}</div>
+        <div style={{fontWeight:600,fontSize:14,color:"var(--color-text-primary)",flex:1}}>{rule.title}</div>
+        <div style={{color:"var(--color-text-muted)",fontSize:16,transition:"transform 0.2s",transform:open?"rotate(180deg)":"rotate(0deg)"}}>▾</div>
       </div>
-      {open&&<div style={{padding:"0 16px 16px",fontSize:13,color:T.text2,lineHeight:1.6,borderTop:`1px solid ${T.border}`}}>
+      {open&&<div style={{padding:"0 16px 16px",fontSize:13,color:"var(--color-text-secondary)",lineHeight:1.6,borderTop:"1px solid var(--color-border)"}}>
         <div style={{paddingTop:12,whiteSpace:"pre-line"}}>{rule.text}</div>
       </div>}
     </div>
@@ -80,9 +80,9 @@ function ConstitutionScreen({ onBack, T }) {
   ];
 
   return (
-    <div style={{animation:"fadeUp 0.25s ease",minHeight:"100vh",background:T.bg,color:T.text,fontFamily:"'DM Sans',sans-serif"}} {...swipe}>
+    <div style={{animation:"fadeUp 0.25s ease",minHeight:"100vh",background:"var(--color-bg)",color:"var(--color-text-primary)",fontFamily:"'DM Sans',sans-serif"}} {...swipe}>
       <div style={{padding:"18px 20px 0",display:"flex",alignItems:"center",gap:12}}>
-        <button onClick={onBack} style={{background:"none",border:"none",color:T.text4,fontSize:13,cursor:"pointer",fontFamily:"inherit",padding:0}}>← назад</button>
+        <button onClick={onBack} style={{background:"none",border:"none",color:"var(--color-text-muted)",fontSize:13,cursor:"pointer",fontFamily:"inherit",padding:0}}>← назад</button>
         <div style={{fontSize:19,fontWeight:700}}>📜 Правила фонда</div>
       </div>
       <div style={{padding:"12px 20px 32px"}}>
@@ -92,7 +92,7 @@ function ConstitutionScreen({ onBack, T }) {
           </div>
         </div>
         {RULES.map((r,i)=><RuleCard key={i} rule={r} T={T} />)}
-        <div style={{textAlign:"center",fontSize:11,color:T.text5,marginTop:12,fontFamily:"monospace"}}>
+        <div style={{textAlign:"center",fontSize:11,color:"var(--color-text-faint)",marginTop:12,fontFamily:"monospace"}}>
           Правила v{APP_VERSION} · Общий фонд 2025
         </div>
       </div>

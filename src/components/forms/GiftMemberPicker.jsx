@@ -14,33 +14,33 @@ function GiftMemberPicker({ members, meId, giftTo, setGiftTo, balances, T }) {
         borderRadius:10,background:"#6366f115",border:"1px solid #6366f140",marginBottom:8}}>
         <Avatar member={selected} size={32}/>
         <div style={{flex:1}}>
-          <div style={{fontWeight:600,fontSize:13,color:T.text}}>{selected.name}</div>
-          <div style={{fontSize:11,color:T.text4}}>{selected.profession||"участник"}</div>
+          <div style={{fontWeight:600,fontSize:13,color:"var(--color-text-primary)"}}>{selected.name}</div>
+          <div style={{fontSize:11,color:"var(--color-text-muted)"}}>{selected.profession||"участник"}</div>
         </div>
         <span style={{fontSize:12,color:"#818cf8",fontWeight:600}}>{cur(balances[selected.id]||0)}</span>
-        <button onClick={()=>setGiftTo(null)} style={{background:"none",border:"none",color:T.text4,fontSize:16,cursor:"pointer",padding:0}}>×</button>
+        <button onClick={()=>setGiftTo(null)} style={{background:"none",border:"none",color:"var(--color-text-muted)",fontSize:16,cursor:"pointer",padding:0}}>×</button>
       </div>}
       <div style={{position:"relative",marginBottom:8}}>
-        <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:T.text5,fontSize:13}}>🔍</span>
+        <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"var(--color-text-faint)",fontSize:13}}>🔍</span>
         <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Найти участника…"
-          style={{width:"100%",background:T.input,border:`1px solid ${T.border}`,borderRadius:10,
-            color:T.text,padding:"9px 12px 9px 32px",fontSize:13,fontFamily:"inherit",outline:"none"}}/>
+          style={{width:"100%",background:"var(--color-input)",border:"1px solid var(--color-border)",borderRadius:10,
+            color:"var(--color-text-primary)",padding:"9px 12px 9px 32px",fontSize:13,fontFamily:"inherit",outline:"none"}}/>
         {q&&<button onClick={()=>setQ("")} style={{position:"absolute",right:9,top:"50%",transform:"translateY(-50%)",
-          background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:15}}>×</button>}
+          background:"none",border:"none",color:"var(--color-text-muted)",cursor:"pointer",fontSize:15}}>×</button>}
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:200,overflowY:"auto"}}>
-        {filtered.length===0&&<div style={{textAlign:"center",color:T.text5,padding:"12px 0",fontSize:13}}>Никого не найдено</div>}
+        {filtered.length===0&&<div style={{textAlign:"center",color:"var(--color-text-faint)",padding:"12px 0",fontSize:13}}>Никого не найдено</div>}
         {filtered.map(m=><div key={m.id} onClick={()=>{setGiftTo(m.id);setQ("");}}
           style={{display:"flex",alignItems:"center",gap:10,padding:"8px 11px",borderRadius:10,cursor:"pointer",
-            background:giftTo===m.id?"#6366f115":T.input,border:`1px solid ${giftTo===m.id?"#6366f150":T.border}`}}
-          onMouseEnter={e=>e.currentTarget.style.background=giftTo===m.id?"#6366f120":T.border}
-          onMouseLeave={e=>e.currentTarget.style.background=giftTo===m.id?"#6366f115":T.input}>
+            background:giftTo===m.id?"#6366f115":"var(--color-input)",border:`1px solid ${giftTo===m.id?"#6366f150":"var(--color-border)"}`}}
+          onMouseEnter={e=>e.currentTarget.style.background=giftTo===m.id?"#6366f120":"var(--color-border)"}
+          onMouseLeave={e=>e.currentTarget.style.background=giftTo===m.id?"#6366f115":"var(--color-input)"}>
           <Avatar member={m} size={28}/>
           <div style={{flex:1}}>
-            <div style={{fontSize:13,fontWeight:500,color:T.text}}>{m.name}</div>
-            {m.profession&&<div style={{fontSize:10,color:T.text4}}>{m.profession}</div>}
+            <div style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)"}}>{m.name}</div>
+            {m.profession&&<div style={{fontSize:10,color:"var(--color-text-muted)"}}>{m.profession}</div>}
           </div>
-          <span style={{fontSize:11,color:T.text4}}>{cur(balances[m.id]||0)}</span>
+          <span style={{fontSize:11,color:"var(--color-text-muted)"}}>{cur(balances[m.id]||0)}</span>
           {giftTo===m.id&&<span style={{color:"#818cf8",fontSize:14}}>✓</span>}
         </div>)}
       </div>

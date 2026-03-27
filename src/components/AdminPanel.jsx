@@ -5,21 +5,20 @@ import { findM } from "../lib/utils";
 import NetworkGraph from "./NetworkGraph";
 import { S_LABEL, S_COLOR } from "../lib/constants";
 
-function NegLimitEditor({ negLimit, onSetNegLimit, T }) {
+function NegLimitEditor({ negLimit, onSetNegLimit }) {
   const [val, setVal] = useState(Math.abs(negLimit));
-  return <div style={{display:"flex",flexDirection:"column",gap:8}}>
-    <div style={{display:"flex",gap:8,alignItems:"center"}}>
-      <input type="number" min="0" max="1000" value={val} onChange={e=>setVal(Number(e.target.value))}
-        style={{flex:1,background:T.input,border:`1px solid ${T.border}`,borderRadius:10,color:T.text,
-          padding:"10px 14px",fontSize:15,fontFamily:"inherit",outline:"none"}} />
-      <span style={{fontSize:13,color:T.text3,flexShrink:0}}>{CUR.plural}</span>
+  return <div className="flex-col gap-2">
+    <div className="flex gap-2 items-center">
+      <input className="input flex-1" type="number" min="0" max="1000" value={val} onChange={e=>setVal(Number(e.target.value))}
+        style={{fontSize:"var(--text-lg)"}} />
+      <span style={{fontSize:"var(--text-sm)",color:"var(--color-text-tertiary)",flexShrink:0}}>{CUR.plural}</span>
     </div>
-    <PB T={T} onClick={()=>onSetNegLimit(-Math.abs(val))}>Сохранить</PB>
+    <PB onClick={()=>onSetNegLimit(-Math.abs(val))}>Сохранить</PB>
   </div>;
 }
 
 
-function AdminPanel({ members, offers, transactions, invites, balances, news, meId, T,
+function AdminPanel({ members, offers, transactions, invites, balances, news, meId,
   categories, onAddCategory, onDeleteCategory, onMoveCategory, onEditCategoryIcon,
   onCreateInvite, onBack, onSelectMember, onFreezeToggle, onDeleteMember,
   onSetRole, onAddNews, onDeleteNews, negLimit, onSetNegLimit }) {
@@ -55,7 +54,7 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
 
   return <div style={{animation:"fadeUp 0.25s ease"}}>
     <div style={{padding:"18px 20px 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-      <button onClick={onBack} style={{background:"none",border:"none",color:T.text4,fontSize:13,cursor:"pointer",fontFamily:"inherit",padding:0}}>← назад</button>
+      <button onClick={onBack} style={{background:"none",border:"none",color:"var(--color-text-muted)",fontSize:13,cursor:"pointer",fontFamily:"inherit",padding:0}}>← назад</button>
       <span style={{fontSize:11,background:"#fbbf2420",color:"#fbbf24",padding:"3px 10px",borderRadius:10}}>⚙ Панель управления</span>
     </div>
     <div style={{padding:"12px 20px 0"}}>
@@ -69,10 +68,10 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
           {l:"Заморожено",v:frozen.length,icon:"❄",hl:frozen.length>0},
           {l:"Предложений",v:offers.filter(o=>o.available).length,icon:"📦"},
         ].map((k,i)=>(
-          <div key={i} onClick={k.action} style={{background:T.card,border:`1px solid ${k.hl?"#f8717140":T.border}`,
+          <div key={i} onClick={k.action} style={{background:"var(--color-surface)",border:`1px solid ${k.hl?"#f8717140":"var(--color-border)"}`,
             borderRadius:12,padding:"9px 11px",cursor:k.action?"pointer":"default"}}>
-            <div style={{fontSize:11,color:T.text4,marginBottom:3}}>{k.icon} {k.l}</div>
-            <div style={{fontSize:17,fontWeight:700,color:k.hl?"#f87171":T.text}}>{k.v}</div>
+            <div style={{fontSize:11,color:"var(--color-text-muted)",marginBottom:3}}>{k.icon} {k.l}</div>
+            <div style={{fontSize:17,fontWeight:700,color:k.hl?"#f87171":"var(--color-text-primary)"}}>{k.v}</div>
           </div>
         ))}
       </div>
@@ -88,10 +87,10 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
         </div>)}
       </div>}
 
-      <div style={{display:"flex",borderBottom:`1px solid ${T.border}`,marginBottom:12,overflowX:"auto"}}>
+      <div style={{display:"flex",borderBottom:"1px solid var(--color-border)",marginBottom:12,overflowX:"auto"}}>
         {tabs.map(t=><button key={t.key} onClick={()=>setAtab(t.key)} style={{
           background:"none",border:"none",padding:"10px 0",marginRight:16,fontSize:13,
-          fontWeight:atab===t.key?600:400,color:atab===t.key?T.text:T.text4,
+          fontWeight:atab===t.key?600:400,color:atab===t.key?"var(--color-text-primary)":"var(--color-text-muted)",
           borderBottom:atab===t.key?"2px solid #6366f1":"2px solid transparent",
           cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>{t.l}</button>)}
       </div>
@@ -102,29 +101,29 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
           const bal=balances[m.id]??m.balance;
           const txC=confirmed.filter(t=>t.from===m.id||t.to===m.id).length;
           const isSelf=m.id===meId;
-          return <div key={m.id} style={{background:T.card,border:`1px solid ${m.frozen?"#475569":m.id===meId?"#6366f130":T.border}`,
+          return <div key={m.id} style={{background:"var(--color-surface)",border:`1px solid ${m.frozen?"#475569":m.id===meId?"#6366f130":"var(--color-border)"}`,
             borderRadius:12,padding:"11px 13px",marginBottom:8,opacity:m.frozen?0.7:1}}>
             <div style={{display:"flex",gap:11,alignItems:"center"}}>
               <div onClick={()=>onSelectMember(m.id)} style={{cursor:"pointer"}}><Avatar member={m} size={38} /></div>
               <div style={{flex:1}}>
                 <div style={{display:"flex",gap:7,alignItems:"center",flexWrap:"wrap"}}>
-                  <span style={{fontWeight:600,fontSize:13,cursor:"pointer",color:T.text}}
+                  <span style={{fontWeight:600,fontSize:13,cursor:"pointer",color:"var(--color-text-primary)"}}
                     onClick={()=>onSelectMember(m.id)}>{m.name}</span>
                   <RoleBadge role={m.systemRole} />
-                  {m.frozen&&<span style={{fontSize:10,background:"#47556920",color:T.text2,padding:"1px 6px",borderRadius:6}}>❄ заморожен</span>}
+                  {m.frozen&&<span style={{fontSize:10,background:"#47556920",color:"var(--color-text-secondary)",padding:"1px 6px",borderRadius:6}}>❄ заморожен</span>}
                 </div>
-                <div style={{fontSize:11,color:T.text4,marginTop:2}}>{m.profession} · {txC} сделок</div>
+                <div style={{fontSize:11,color:"var(--color-text-muted)",marginTop:2}}>{m.profession} · {txC} сделок</div>
               </div>
               <Pill balance={bal} />
             </div>
             {!isSelf&&<div style={{display:"flex",gap:6,marginTop:10,paddingTop:9,borderTop:"1px solid #1e2330"}}>
-              {isAdmin&&<button onClick={()=>setShowRoleModal(m.id)} style={{flex:1,background:T.bg,
-                border:`1px solid ${T.border}`,color:"#818cf8",padding:"6px",borderRadius:8,
+              {isAdmin&&<button onClick={()=>setShowRoleModal(m.id)} style={{flex:1,background:"var(--color-bg)",
+                border:"1px solid var(--color-border)",color:"#818cf8",padding:"6px",borderRadius:8,
                 fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>⚙ Роль</button>}
-              <button onClick={()=>onFreezeToggle(m.id)} style={{flex:1,background:T.bg,
-                border:`1px solid ${T.border}`,color:m.frozen?"#4ade80":"#fbbf24",padding:"6px",borderRadius:8,
+              <button onClick={()=>onFreezeToggle(m.id)} style={{flex:1,background:"var(--color-bg)",
+                border:"1px solid var(--color-border)",color:m.frozen?"#4ade80":"#fbbf24",padding:"6px",borderRadius:8,
                 fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>{m.frozen?"❄ Разморозить":"❄ Заморозить"}</button>
-              {isAdmin&&<button onClick={()=>setShowDelConfirm(m.id)} style={{background:T.bg,
+              {isAdmin&&<button onClick={()=>setShowDelConfirm(m.id)} style={{background:"var(--color-bg)",
                 border:"1px solid #7f1d1d",color:"#f87171",padding:"6px 10px",borderRadius:8,
                 fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>✕</button>}
             </div>}
@@ -134,32 +133,32 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
 
       {/* ANALYTICS TAB */}
       {atab==="analytics"&&<div>
-        {Object.keys(catVol).length>0&&<div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:13,padding:"13px 14px",marginBottom:12}}>
+        {Object.keys(catVol).length>0&&<div style={{background:"var(--color-surface)",border:"1px solid var(--color-border)",borderRadius:13,padding:"13px 14px",marginBottom:12}}>
           <div style={{fontSize:13,fontWeight:600,marginBottom:10}}>Оборот по категориям</div>
           {Object.entries(catVol).sort((a,b)=>b[1]-a[1]).map(([cat,vol])=>(
             <div key={cat} style={{marginBottom:8}}>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:T.text2,marginBottom:3}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"var(--color-text-secondary)",marginBottom:3}}>
                 <span>{CAT_ICONS[cat]||"◎"} {cat}</span><span style={{fontWeight:600}}>{cur(vol)}</span>
               </div>
-              <div style={{height:5,background:T.border,borderRadius:3}}>
+              <div style={{height:5,background:"var(--color-border)",borderRadius:3}}>
                 <div style={{height:"100%",borderRadius:3,background:"#6366f1",width:`${(vol/maxVol)*100}%`}} /></div>
             </div>
           ))}
         </div>}
-        <div style={{fontSize:11,color:T.text4,marginBottom:8}}>Все транзакции · {transactions.length}</div>
-        {transactions.length===0&&<div style={{textAlign:"center",color:T.text5,padding:"24px 0",fontSize:13}}>Транзакций пока нет</div>}
+        <div style={{fontSize:11,color:"var(--color-text-muted)",marginBottom:8}}>Все транзакции · {transactions.length}</div>
+        {transactions.length===0&&<div style={{textAlign:"center",color:"var(--color-text-faint)",padding:"24px 0",fontSize:13}}>Транзакций пока нет</div>}
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
           {transactions.map(tx=>{
             const from=findM(members,tx.from),to=findM(members,tx.to);
             const sc=S_COLOR[tx.status]||"#475569";
-            return <div key={tx.id} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:10,padding:"10px 12px"}}>
+            return <div key={tx.id} style={{background:"var(--color-surface)",border:"1px solid var(--color-border)",borderRadius:10,padding:"10px 12px"}}>
               <div style={{display:"flex",justifyContent:"space-between"}}>
                 <div style={{flex:1}}>
                   <div style={{display:"flex",gap:7,alignItems:"center",marginBottom:4}}>
                     <span>{tx.type==="gift"?"💛":"⇄"}</span>
                     <span style={{fontSize:13,fontWeight:500}}>{tx.what}</span>
                   </div>
-                  <div style={{fontSize:11,color:T.text3,display:"flex",gap:5,alignItems:"center"}}>
+                  <div style={{fontSize:11,color:"var(--color-text-tertiary)",display:"flex",gap:5,alignItems:"center"}}>
                     <span style={{cursor:"pointer",color:"#6366f1"}} onClick={()=>from.id&&onSelectMember(from.id)}>{from.name.split(" ")[0]}</span>
                     <span>→</span>
                     <span style={{cursor:"pointer",color:"#6366f1"}} onClick={()=>to.id&&onSelectMember(to.id)}>{to.name.split(" ")[0]}</span>
@@ -168,7 +167,7 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
                 </div>
                 <div style={{textAlign:"right"}}>
                   <div style={{fontSize:13,fontWeight:700}}>{cur(tx.amount)}</div>
-                  <div style={{fontSize:10,color:T.text5,fontFamily:"monospace"}}>{tx.date}</div>
+                  <div style={{fontSize:10,color:"var(--color-text-faint)",fontFamily:"monospace"}}>{tx.date}</div>
                 </div>
               </div>
             </div>;
@@ -185,13 +184,13 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
             const sc=confirmed.filter(t=>t.from===m.id||t.to===m.id).length;
             const inv=members.filter(x=>x.invitedBy===m.id).length;
             return <div key={m.id} onClick={()=>onSelectMember(m.id)} style={{display:"flex",alignItems:"center",gap:10,
-              background:T.card,border:`1px solid ${T.border}`,borderRadius:10,padding:"9px 12px",marginBottom:6,cursor:"pointer"}}
-              onMouseEnter={e=>e.currentTarget.style.background=T.border}
-              onMouseLeave={e=>e.currentTarget.style.background=T.card}>
-              <span style={{fontSize:13,color:T.text5,fontWeight:700,width:16}}>#{i+1}</span>
+              background:"var(--color-surface)",border:"1px solid var(--color-border)",borderRadius:10,padding:"9px 12px",marginBottom:6,cursor:"pointer"}}
+              onMouseEnter={e=>e.currentTarget.style.background="var(--color-border)"}
+              onMouseLeave={e=>e.currentTarget.style.background="var(--color-surface)"}>
+              <span style={{fontSize:13,color:"var(--color-text-faint)",fontWeight:700,width:16}}>#{i+1}</span>
               <Avatar member={m} size={32} />
               <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600}}>{m.name}</div>
-                <div style={{fontSize:11,color:T.text4}}>{sc} сделок · привёл {inv}</div></div>
+                <div style={{fontSize:11,color:"var(--color-text-muted)"}}>{sc} сделок · привёл {inv}</div></div>
               <Pill balance={balances[m.id]??m.balance} />
             </div>;
           })}
@@ -204,45 +203,45 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
         {invites.map(inv=>{
           const creator=inv.createdBy>0?findM(members,inv.createdBy):{name:"Admin",avatar:"⚙",id:0};
           const user=inv.usedBy?findM(members,inv.usedBy):null;
-          return <div key={inv.code} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:10,padding:"10px 14px",marginBottom:7,
+          return <div key={inv.code} style={{background:"var(--color-surface)",border:"1px solid var(--color-border)",borderRadius:10,padding:"10px 14px",marginBottom:7,
             display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div>
               <div style={{fontFamily:"monospace",fontSize:14,fontWeight:600,color:user?"#475569":"#e2e8f0"}}>{inv.code}</div>
-              <div style={{fontSize:11,color:T.text5,marginTop:2}}>Создал: <span style={{color:T.text2}}>{creator.name}</span> · {inv.createdAt}</div>
+              <div style={{fontSize:11,color:"var(--color-text-faint)",marginTop:2}}>Создал: <span style={{color:"var(--color-text-secondary)"}}>{creator.name}</span> · {inv.createdAt}</div>
               {user?<div style={{fontSize:11,color:"#4ade80",marginTop:2}}>Использовал: {user.name}</div>
                 :<div style={{fontSize:11,color:"#fbbf24",marginTop:2}}>Ожидает</div>}
             </div>
-            {!user&&<CopyBtn text={inv.code} T={T} />}
+            {!user&&<CopyBtn text={inv.code} />}
           </div>;
         })}
       </div>}
 
       {/* GIFTS TAB */}
       {atab==="gifts"&&<div>
-        <div style={{fontSize:11,color:T.text4,marginBottom:10}}>
+        <div style={{fontSize:11,color:"var(--color-text-muted)",marginBottom:10}}>
           Все дары · {transactions.filter(t=>t.type==="gift").length} записей
         </div>
-        {transactions.filter(t=>t.type==="gift").length===0&&<div style={{textAlign:"center",color:T.text5,padding:"24px 0",fontSize:13}}>Даров пока не было</div>}
+        {transactions.filter(t=>t.type==="gift").length===0&&<div style={{textAlign:"center",color:"var(--color-text-faint)",padding:"24px 0",fontSize:13}}>Даров пока не было</div>}
         {[...transactions].filter(t=>t.type==="gift").reverse().map(tx=>{
           const from=findM(members,tx.from),to=findM(members,tx.to);
-          return <div key={tx.id} style={{background:T.card,border:"1px solid #22c55e30",borderRadius:10,padding:"10px 14px",marginBottom:7}}>
+          return <div key={tx.id} style={{background:"var(--color-surface)",border:"1px solid #22c55e30",borderRadius:10,padding:"10px 14px",marginBottom:7}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div style={{flex:1}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
                   <span>💛</span><span style={{fontWeight:600,fontSize:13}}>{tx.what}</span>
                 </div>
-                <div style={{fontSize:12,color:T.text3,display:"flex",gap:6,alignItems:"center"}}>
+                <div style={{fontSize:12,color:"var(--color-text-tertiary)",display:"flex",gap:6,alignItems:"center"}}>
                   <span style={{cursor:from.id?"pointer":"default",color:from.id?"#6366f1":"#475569"}}
                     onClick={()=>from.id&&onSelectMember(from.id)}>{from.name}</span>
                   <span>→</span>
                   <span style={{cursor:to.id?"pointer":"default",color:to.id?"#6366f1":"#475569"}}
                     onClick={()=>to.id&&onSelectMember(to.id)}>{to.name}</span>
                 </div>
-                {tx.note&&<div style={{fontSize:11,color:T.text4,marginTop:4,fontStyle:"italic"}}>«{tx.note}»</div>}
+                {tx.note&&<div style={{fontSize:11,color:"var(--color-text-muted)",marginTop:4,fontStyle:"italic"}}>«{tx.note}»</div>}
               </div>
               <div style={{textAlign:"right",marginLeft:10}}>
                 <div style={{fontSize:14,fontWeight:700,color:"#fbbf24"}}>{cur(tx.amount)}</div>
-                <div style={{fontSize:10,color:T.text5,fontFamily:"monospace",marginTop:2}}>{tx.date}</div>
+                <div style={{fontSize:10,color:"var(--color-text-faint)",fontFamily:"monospace",marginTop:2}}>{tx.date}</div>
               </div>
             </div>
           </div>;
@@ -252,18 +251,18 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
       {/* NEWS TAB */}
       {/* CATEGORIES TAB */}
       {atab==="categories"&&isAdmin&&<div>
-        <div style={{fontSize:12,color:T.text4,marginBottom:12}}>Управление категориями · {(categories||[]).filter(c=>c!=="Все").length} категорий</div>
-        <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:14,padding:14,marginBottom:12}}>
-          <div style={{fontSize:13,fontWeight:600,color:T.text,marginBottom:10}}>Добавить категорию</div>
+        <div style={{fontSize:12,color:"var(--color-text-muted)",marginBottom:12}}>Управление категориями · {(categories||[]).filter(c=>c!=="Все").length} категорий</div>
+        <div style={{background:"var(--color-surface)",border:"1px solid var(--color-border)",borderRadius:14,padding:14,marginBottom:12}}>
+          <div style={{fontSize:13,fontWeight:600,color:"var(--color-text-primary)",marginBottom:10}}>Добавить категорию</div>
           <div style={{display:"flex",gap:8,marginBottom:8}}>
             <input value={newCatIcon} onChange={e=>setNewCatIcon(e.target.value)} placeholder="🏷"
-              style={{width:46,background:T.input,border:`1px solid ${T.border}`,borderRadius:10,
-                color:T.text,padding:"10px",fontSize:18,fontFamily:"inherit",outline:"none",textAlign:"center"}} />
+              style={{width:46,background:"var(--color-input)",border:"1px solid var(--color-border)",borderRadius:10,
+                color:"var(--color-text-primary)",padding:"10px",fontSize:18,fontFamily:"inherit",outline:"none",textAlign:"center"}} />
             <input value={newCatName} onChange={e=>setNewCatName(e.target.value)} placeholder="Название категории"
-              style={{flex:1,background:T.input,border:`1px solid ${T.border}`,borderRadius:10,
-                color:T.text,padding:"10px",fontSize:13,fontFamily:"inherit",outline:"none"}} />
+              style={{flex:1,background:"var(--color-input)",border:"1px solid var(--color-border)",borderRadius:10,
+                color:"var(--color-text-primary)",padding:"10px",fontSize:13,fontFamily:"inherit",outline:"none"}} />
           </div>
-          <PB T={T} disabled={!newCatName.trim()||(categories||[]).includes(newCatName.trim())}
+          <PB disabled={!newCatName.trim()||(categories||[]).includes(newCatName.trim())}
             onClick={()=>{
               if(onAddCategory)onAddCategory(newCatName.trim(),newCatIcon);
               setNewCatName("");setNewCatIcon("✦");
@@ -273,63 +272,63 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
           {(categories||[]).filter(c=>c!=="Все").map((cat,idx,arr)=>{
             const cnt=offers.filter(o=>o.category===cat).length;
             return <div key={cat} style={{display:"flex",alignItems:"center",gap:8,
-              background:T.card,border:`1px solid ${T.border}`,borderRadius:12,padding:"10px 12px"}}>
+              background:"var(--color-surface)",border:"1px solid var(--color-border)",borderRadius:12,padding:"10px 12px"}}>
               <div style={{display:"flex",flexDirection:"column",gap:2,flexShrink:0}}>
                 <button onClick={()=>onMoveCategory&&onMoveCategory(cat,-1)} disabled={idx===0}
-                  style={{background:"none",border:`1px solid ${T.border}`,color:idx===0?T.text5:T.text3,
+                  style={{background:"none",border:"1px solid var(--color-border)",color:idx===0?"var(--color-text-faint)":"var(--color-text-tertiary)",
                     width:22,height:22,borderRadius:5,fontSize:10,cursor:idx===0?"default":"pointer",
                     fontFamily:"inherit",lineHeight:1,opacity:idx===0?0.3:1}}>▲</button>
                 <button onClick={()=>onMoveCategory&&onMoveCategory(cat,1)} disabled={idx===arr.length-1}
-                  style={{background:"none",border:`1px solid ${T.border}`,color:idx===arr.length-1?T.text5:T.text3,
+                  style={{background:"none",border:"1px solid var(--color-border)",color:idx===arr.length-1?"var(--color-text-faint)":"var(--color-text-tertiary)",
                     width:22,height:22,borderRadius:5,fontSize:10,cursor:idx===arr.length-1?"default":"pointer",
                     fontFamily:"inherit",lineHeight:1,opacity:idx===arr.length-1?0.3:1}}>▼</button>
               </div>
-              <div style={{width:34,height:34,borderRadius:9,background:T.border,display:"flex",
+              <div style={{width:34,height:34,borderRadius:9,background:"var(--color-border)",display:"flex",
                 alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0}}>
                 {CAT_ICONS[cat]||"✦"}
               </div>
               <div style={{flex:1}}>
-                <div style={{fontWeight:600,fontSize:14,color:T.text}}>{cat}</div>
-                <div style={{fontSize:11,color:T.text4}}>{cnt} предложений</div>
+                <div style={{fontWeight:600,fontSize:14,color:"var(--color-text-primary)"}}>{cat}</div>
+                <div style={{fontSize:11,color:"var(--color-text-muted)"}}>{cnt} предложений</div>
               </div>
               <input defaultValue={CAT_ICONS[cat]||"✦"}
                 onBlur={e=>{ const v=e.target.value.trim(); if(v&&onEditCategoryIcon) onEditCategoryIcon(cat,v); }}
-                style={{width:36,textAlign:"center",fontSize:18,background:T.input,
-                  border:`1px solid ${T.border}`,borderRadius:8,color:T.text,padding:"4px",
+                style={{width:36,textAlign:"center",fontSize:18,background:"var(--color-input)",
+                  border:"1px solid var(--color-border)",borderRadius:8,color:"var(--color-text-primary)",padding:"4px",
                   fontFamily:"inherit",outline:"none",flexShrink:0}} title="Иконка" />
               {cnt===0&&<button onClick={()=>onDeleteCategory&&onDeleteCategory(cat)}
-                style={{background:"none",border:`1px solid ${T.border}`,color:"#f87171",
+                style={{background:"none",border:"1px solid var(--color-border)",color:"#f87171",
                   padding:"4px 9px",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>✕</button>}
-              {cnt>0&&<span style={{fontSize:10,color:T.text5,padding:"2px 6px",background:T.border,borderRadius:5}}>исп.</span>}
+              {cnt>0&&<span style={{fontSize:10,color:"var(--color-text-faint)",padding:"2px 6px",background:"var(--color-border)",borderRadius:5}}>исп.</span>}
             </div>;
           })}
         </div>
       </div>}
 
       {atab==="news"&&isAdmin&&<div>
-        <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:14,padding:"14px",marginBottom:12}}>
+        <div style={{background:"var(--color-surface)",border:"1px solid var(--color-border)",borderRadius:14,padding:"14px",marginBottom:12}}>
           <div style={{fontSize:14,fontWeight:600,marginBottom:10}}>Новая новость</div>
-          <SL T={T}>Заголовок</SL><FI T={T} value={newsTitle} onChange={setNewsTitle} placeholder="Заголовок" />
-          <SL T={T}>Текст</SL><FI T={T} value={newsBody} onChange={setNewsBody} placeholder="Текст новости…" multi />
+          <SL>Заголовок</SL><FI value={newsTitle} onChange={setNewsTitle} placeholder="Заголовок" />
+          <SL>Текст</SL><FI value={newsBody} onChange={setNewsBody} placeholder="Текст новости…" multi />
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:11}}>
-            <div onClick={()=>setNewsPinned(!newsPinned)} style={{width:36,height:20,borderRadius:10,background:newsPinned?"#6366f1":T.border,
+            <div onClick={()=>setNewsPinned(!newsPinned)} style={{width:36,height:20,borderRadius:10,background:newsPinned?"#6366f1":"var(--color-border)",
               cursor:"pointer",position:"relative",transition:"background 0.2s"}}>
               <div style={{position:"absolute",top:2,left:newsPinned?18:2,width:16,height:16,borderRadius:"50%",background:"#fff",transition:"left 0.2s"}} /></div>
-            <span style={{fontSize:13,color:T.text3}}>Закрепить</span>
+            <span style={{fontSize:13,color:"var(--color-text-tertiary)"}}>Закрепить</span>
           </div>
           <PB onClick={()=>{if(newsTitle.trim()&&newsBody.trim()){onAddNews({title:newsTitle,body:newsBody,pinned:newsPinned});setNewsTitle("");setNewsBody("");setNewsPinned(false);}}}
             disabled={!newsTitle.trim()||!newsBody.trim()}>Опубликовать</PB>
         </div>
         {[...news].sort((a,b)=>b.pinned-a.pinned).map(n=>(
-          <div key={n.id} style={{background:T.card,border:`1px solid ${n.pinned?"#6366f140":T.border}`,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
+          <div key={n.id} style={{background:"var(--color-surface)",border:`1px solid ${n.pinned?"#6366f140":"var(--color-border)"}`,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
               <div style={{flex:1}}>
                 {n.pinned&&<span style={{fontSize:10,color:"#6366f1",marginBottom:4,display:"block"}}>📌 Закреплено</span>}
                 <div style={{fontWeight:600,fontSize:14,marginBottom:5}}>{n.title}</div>
-                <div style={{fontSize:13,color:T.text3,lineHeight:1.5}}>{n.body}</div>
-                <div style={{fontSize:11,color:T.text5,marginTop:6,fontFamily:"monospace"}}>{n.date}</div>
+                <div style={{fontSize:13,color:"var(--color-text-tertiary)",lineHeight:1.5}}>{n.body}</div>
+                <div style={{fontSize:11,color:"var(--color-text-faint)",marginTop:6,fontFamily:"monospace"}}>{n.date}</div>
               </div>
-              <button onClick={()=>onDeleteNews(n.id)} style={{background:"none",border:"none",color:T.text5,fontSize:16,cursor:"pointer",marginLeft:10,flexShrink:0}}>✕</button>
+              <button onClick={()=>onDeleteNews(n.id)} style={{background:"none",border:"none",color:"var(--color-text-faint)",fontSize:16,cursor:"pointer",marginLeft:10,flexShrink:0}}>✕</button>
             </div>
           </div>
         ))}
@@ -339,15 +338,15 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
     {/* ROLE MODAL */}
     {showRoleModal&&<Sheet onClose={()=>setShowRoleModal(null)}>
       <div style={{fontSize:17,fontWeight:700,marginBottom:14}}>Роль участника</div>
-      <div style={{fontSize:13,color:T.text3,marginBottom:16}}>{findM(members,showRoleModal).name}</div>
+      <div style={{fontSize:13,color:"var(--color-text-tertiary)",marginBottom:16}}>{findM(members,showRoleModal).name}</div>
       {[ROLES.member,ROLES.moderator,ROLES.admin].map(r=>(
         <div key={r} onClick={()=>{onSetRole(showRoleModal,r);setShowRoleModal(null);}} style={{
           display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:12,cursor:"pointer",marginBottom:8,
-          background:findM(members,showRoleModal).systemRole===r?"#6366f115":T.bg,
-          border:`1px solid ${findM(members,showRoleModal).systemRole===r?"#6366f140":T.border}`}}>
+          background:findM(members,showRoleModal).systemRole===r?"#6366f115":"var(--color-bg)",
+          border:`1px solid ${findM(members,showRoleModal).systemRole===r?"#6366f140":"var(--color-border)"}`}}>
           <div style={{width:10,height:10,borderRadius:"50%",background:ROLE_COLOR[r]}} />
           <div><div style={{fontWeight:600,fontSize:14}}>{ROLE_LABEL[r]}</div>
-            <div style={{fontSize:11,color:T.text3}}>
+            <div style={{fontSize:11,color:"var(--color-text-tertiary)"}}>
               {r===ROLES.admin?"Полные права"
                 :r===ROLES.moderator?"Управление участниками и предложениями"
                 :"Стандартный участник"}
@@ -361,10 +360,10 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
     {/* DELETE CONFIRM */}
     {showDelConfirm&&<Sheet onClose={()=>setShowDelConfirm(null)}>
       <div style={{fontSize:17,fontWeight:700,marginBottom:8}}>Удалить участника?</div>
-      <div style={{fontSize:13,color:T.text3,marginBottom:8}}>
-        <b style={{color:T.text}}>{findM(members,showDelConfirm).name}</b>
+      <div style={{fontSize:13,color:"var(--color-text-tertiary)",marginBottom:8}}>
+        <b style={{color:"var(--color-text-primary)"}}>{findM(members,showDelConfirm).name}</b>
       </div>
-      <div style={{fontSize:13,color:T.text3,lineHeight:1.5,marginBottom:20,background:T.bg,padding:"10px 12px",borderRadius:10}}>
+      <div style={{fontSize:13,color:"var(--color-text-tertiary)",lineHeight:1.5,marginBottom:20,background:"var(--color-bg)",padding:"10px 12px",borderRadius:10}}>
         Профиль будет деактивирован. История транзакций сохранится — балансы других участников не изменятся.
         {(balances[showDelConfirm]??0)>0&&<span style={{color:"#fbbf24",display:"block",marginTop:6}}>Положительный баланс ({cur(balances[showDelConfirm])}) перейдёт в общий фонд.</span>}
       </div>
@@ -375,14 +374,14 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
     </Sheet>}
 
       {atab==="settings"&&isAdmin&&<div>
-        <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:14,padding:"16px",marginBottom:12}}>
+        <div style={{background:"var(--color-surface)",border:"1px solid var(--color-border)",borderRadius:14,padding:"16px",marginBottom:12}}>
           <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>⚖️ Лимит задолженности</div>
-          <div style={{fontSize:12,color:T.text3,marginBottom:12,lineHeight:1.5}}>
+          <div style={{fontSize:12,color:"var(--color-text-tertiary)",marginBottom:12,lineHeight:1.5}}>
             Участник не может уйти ниже этого значения. Текущий лимит: <b style={{color:"#f87171"}}>-{cur(Math.abs(negLimit))}</b>
           </div>
-          <NegLimitEditor negLimit={negLimit} onSetNegLimit={onSetNegLimit} T={T} />
+          <NegLimitEditor negLimit={negLimit} onSetNegLimit={onSetNegLimit} />
         </div>
-        <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:14,padding:"14px"}}>
+        <div style={{background:"var(--color-surface)",border:"1px solid var(--color-border)",borderRadius:14,padding:"14px"}}>
           <div style={{fontSize:14,fontWeight:600,marginBottom:10}}>📊 Статистика фонда</div>
           {[
             {l:"Участников активных",v:members.filter(m=>!m.frozen).length},
@@ -390,9 +389,9 @@ function AdminPanel({ members, offers, transactions, invites, balances, news, me
             {l:"Сделок завершено",v:transactions.filter(t=>t.status==="confirmed").length},
             {l:"Зёрен в обороте",v:parseFloat(Object.values(balances).filter(b=>b>0).reduce((a,b)=>a+b,0).toFixed(1))},
             {l:"Суммарная задолженность",v:parseFloat(Object.values(balances).filter(b=>b<0).reduce((a,b)=>a+b,0).toFixed(1))},
-          ].map((s,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:`1px solid ${T.border}`}}>
-            <span style={{fontSize:13,color:T.text3}}>{s.l}</span>
-            <span style={{fontSize:13,fontWeight:600,color:T.text}}>{s.v}</span>
+          ].map((s,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--color-border)"}}>
+            <span style={{fontSize:13,color:"var(--color-text-tertiary)"}}>{s.l}</span>
+            <span style={{fontSize:13,fontWeight:600,color:"var(--color-text-primary)"}}>{s.v}</span>
           </div>)}
         </div>
       </div>}
