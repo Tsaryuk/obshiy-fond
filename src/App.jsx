@@ -759,7 +759,7 @@ export default function App() {
     {notif&&<Notif msg={notif} />}
     <div style={{...INNER,paddingBottom:"calc(var(--nav-height) + var(--safe-area-bottom) + 8px)"}}>
     {/* STICKY TOP: HEADER + SEARCH + TABS */}
-    <div className="header" style={{padding:0,flexDirection:"column",gap:0,borderBottom:"none"}}>
+    <div className="header" style={{padding:0,flexDirection:"column",gap:0,borderBottom:"none",alignItems:"stretch"}}>
       <div style={{padding:"14px 20px 10px",borderBottom:"1px solid var(--color-border)",display:"flex",flexDirection:"column",gap:0}}>
         <div className="flex justify-between items-center w-full">
           <div className="flex items-center gap-3">
