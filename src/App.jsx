@@ -52,6 +52,7 @@ export default function App() {
   const [tab,          setTab]          = useState("offers");
   const [catFilter,    setCatFilter]    = useState("Все");
   const [search,       setSearch]       = useState("");
+  const [showSearch,   setShowSearch]   = useState(false);
   const [selOffer,     setSelOffer]     = useState(null);
   const [chatInitPeer, setChatInitPeer] = useState(null); // pre-open chat with member
   const [chatInitMsg,  setChatInitMsg]  = useState("");   // pre-fill message
@@ -771,6 +772,8 @@ export default function App() {
           <div className="flex items-center gap-2">
             <Pill balance={myBalance} />
             <div className="flex items-center gap-1">
+              <button className="btn-icon" onClick={()=>{setShowSearch(s=>{if(s){setSearch("");}return !s;})}}
+                style={{width:34,height:34,borderRadius:"var(--radius-md)",background:showSearch?"var(--color-accent-surface)":"transparent"}}>🔍</button>
               <button className="btn-icon" onClick={()=>setThemeKey(k=>k==="dark"?"light":"dark")}
                 style={{width:34,height:34,borderRadius:"var(--radius-md)"}}>{themeKey==="dark"?"☀️":"🌙"}</button>
               <button className="btn-icon" onClick={()=>setShowNotifs(!showNotifs)}
@@ -786,14 +789,14 @@ export default function App() {
         </div>}
       </div>
 
-      {/* SEARCH */}
-      <div style={{padding:"9px 20px 0",background:"var(--color-bg)"}}>
+      {/* SEARCH (collapsible) */}
+      {showSearch&&<div style={{padding:"9px 20px 0",background:"var(--color-bg)",animation:"fadeUp 0.2s ease"}}>
         <div className="search-wrap">
-          <input className="search-input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Поиск по названию, категории…" />
+          <input className="search-input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Поиск по названию, категории…" autoFocus />
           <span className="search-icon">🔍</span>
           {search&&<button className="search-clear" onClick={()=>setSearch("")}>×</button>}
         </div>
-      </div>
+      </div>}
 
       {/* TABS */}
       <div ref={tabsRef} className="htabs" style={{position:"relative",marginTop:8}}>
