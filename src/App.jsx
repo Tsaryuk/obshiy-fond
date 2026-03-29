@@ -182,12 +182,12 @@ export default function App() {
   const myNotifs  = notifications.filter(n=>n.memberId===meId&&!n.read);
 
   const TABS_DEF = [
-    {key:"news",    l:"Новости"},
     {key:"offers",  l:"Предложения"},
     {key:"requests",l:"Запросы"},
     {key:"members", l:"Участники"},
     {key:"graph",   l:"Граф"},
     {key:"ledger",  l:"Реестр"},
+    {key:"news",    l:"Новости"},
   ];
 
   const tabKeys = TABS_DEF.map(t=>t.key);
