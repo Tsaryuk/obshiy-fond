@@ -822,6 +822,7 @@ textarea.input {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  overflow-x: clip;
 }
 
 [data-theme="dark"] .header {
@@ -850,6 +851,9 @@ textarea.input {
   scrollbar-width: none;
   -ms-overflow-style: none;
   scroll-behavior: smooth;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 .htabs::-webkit-scrollbar {
   display: none;
