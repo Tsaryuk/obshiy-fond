@@ -670,8 +670,8 @@ export default function App() {
   const pinnedNews=news.filter(n=>n.pinned);
   const allNews=[...news].sort((a,b)=>b.pinned-a.pinned);
 
-  const WRAP={minHeight:"100dvh"};
-  const INNER={maxWidth:520,margin:"0 auto",position:"relative"};
+  const WRAP={minHeight:"100dvh",overflowX:"hidden"};
+  const INNER={maxWidth:520,margin:"0 auto",position:"relative",overflowX:"hidden"};
 
   // ─── BOTTOM TAB BAR ──
   const TAB_BAR_ITEMS = [
